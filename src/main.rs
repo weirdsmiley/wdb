@@ -3,7 +3,6 @@ use std::env;
 use std::error::Error;
 use std::fs;
 use std::process;
-use std::sync::{Arc, Mutex};
 
 mod debugee;
 mod debugger;
@@ -16,14 +15,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         eprintln!("file not found");
         process::exit(1);
     }
-    // we need to move both of these
-    let bin : Vec<u8> = fs::read(&args[1])?;
-    let obj: Arc<Mutex<object::File<'static>>> = Arc::new(Mutex::from(object::File::parse(&*bin)?));
+    let bin = fs::read(&args[1])?;
+    let obj = object::File::parse(&*bin)?;
 
-    if obj.lock().unwrap().architecture() == object::Architecture::X86_64 {
-        debugger::init_debugger(bin, obj)?;
+    if obj.architecture() == object::Architecture::X86_64 {
+        debugger::init_debugger(&bin, &obj)?;
     } else {
-        eprintln!("file format not supported on this architecture");
+        eprintln!("file format not supported");
         process::exit(1);
     }
 

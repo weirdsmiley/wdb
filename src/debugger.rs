@@ -20,8 +20,8 @@ use std::thread;
 //                // essentially a sequential program
 //      SIGTRAP returned, breakpoint hit, dump source line
 pub(crate) fn init_debugger(
-    bin: Vec<u8>,
-    obj: Arc<Mutex<object::File<'static>>>,
+    bin: &Vec<u8>,
+    obj: &object::File
 ) -> Result<(), Box<dyn Error>> {
     // use .text section to get the instructions
     // if let Some(section) = obj.section_by_name(".text") {
@@ -43,16 +43,16 @@ pub(crate) fn init_debugger(
         // at this procedure in a different way to make it parallel.
 
         // FIXME: Fix obj dependency over bin while borrow happens.
-        let debugee_thread = thread::spawn(move || {
-            debugee::continue_debugee(obj);
-        });
+        // let debugee_thread = thread::spawn(move || {
+        //     debugee::continue_debugee(obj);
+        // });
 
-        debugee_thread
-            .join()
-            .expect("unable to join debugee thread");
+        // debugee_thread
+        //     .join()
+        //     .expect("unable to join debugee thread");
 
         // waitpid();
-        cmd = String::new();
+        // cmd = String::new();
         parse::get_next_cmd(&mut cmd)?;
         parse::parse_cmd2(&cmd)?;
     }

@@ -39,6 +39,12 @@ pub(crate) fn parse_cmd2(cmd: &String) -> Result<(), Box<dyn Error>> {
     let v: Vec<&str> = cmd.split_whitespace().collect();
     println!("{:?}", v);
     // lets match here only and return ??
+
+    // Bypassing Ctrl-d
+    if cmd.is_empty() {
+        return Ok(());
+    }
+
     match v[0] {
         "b" => {
             let line = v[1];
@@ -52,9 +58,16 @@ pub(crate) fn parse_cmd2(cmd: &String) -> Result<(), Box<dyn Error>> {
 }
 
 pub(crate) fn get_next_cmd(input: &mut String) -> Result<&mut String, Box<dyn Error>> {
-    // let mut input = String::new();
+    let prev_input = input.clone();
+    *input = String::new();
+
     let stdin = std::io::stdin();
     print!("(rdb): ");
     stdin.read_line(input)?;
+
+    if input == "\n" {
+        *input = prev_input.clone();
+    }
+
     Ok(input)
 }
