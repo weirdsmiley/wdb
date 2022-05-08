@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 object = "0.28.3"
+nix = "0.24.1"

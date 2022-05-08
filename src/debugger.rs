@@ -5,6 +5,28 @@ use std::error::Error;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
+// This stores all other structs defined in parse.rs
+// FIXME: Remove all structs' pub visibility.
+pub(crate) struct Context {
+    pub ModInfo: parse::ModuleInfo,
+    pub FCtx: parse::FileTy,
+    pub BrCtx: parse::BreakPointTy,
+    pub RCtx: parse::RunTy,
+}
+
+impl Context {
+    // Should this return Error ype otherwise too?
+    // Why should it contain dyn?
+    pub(crate) fn new(src: &'static str, bin: &'static str) -> Result<Self, Box<dyn Error>> {
+        Ok(Context {
+            ModInfo: parse::ModuleInfo::new(src, bin)?,
+            FCtx: parse::FileTy::new("").unwrap(),
+            BrCtx: parse::BreakPointTy::new(0).unwrap(),
+            RCtx: parse::RunTy::new(false, 0).unwrap(),
+        })
+    }
+}
+
 // Start the debugger
 // 1. First inside a loop {} ask for user input
 // 2. If the user input is a breakpoint
@@ -19,10 +41,7 @@ use std::thread;
 //      waitpid() // but we are still waiting for the debugee to stop
 //                // essentially a sequential program
 //      SIGTRAP returned, breakpoint hit, dump source line
-pub(crate) fn init_debugger(
-    bin: &Vec<u8>,
-    obj: &object::File
-) -> Result<(), Box<dyn Error>> {
+pub(crate) fn init_debugger(bin: &Vec<u8>, obj: &object::File) -> Result<(), Box<dyn Error>> {
     // use .text section to get the instructions
     // if let Some(section) = obj.section_by_name(".text") {
     //     instprint!("{:#x?}", section.data()?);
@@ -30,9 +49,13 @@ pub(crate) fn init_debugger(
     //     eprintln!("section not available");
     // }
     // println!("{:#x?}", bin);
+
+    // FIXME: This is not actually correct!
+    let mut Ctx: Context = Context::new("main.rs", "bin")?;
+
     let mut cmd = String::new();
     parse::get_next_cmd(&mut cmd)?;
-    parse::parse_cmd2(&cmd);
+    parse::parse_cmd2(&mut Ctx, &cmd)?;
 
     loop {
         // This has to be the modified binary (that is binary after
@@ -43,17 +66,22 @@ pub(crate) fn init_debugger(
         // at this procedure in a different way to make it parallel.
 
         // FIXME: Fix obj dependency over bin while borrow happens.
+
         // let debugee_thread = thread::spawn(move || {
-        //     debugee::continue_debugee(obj);
+        //     debugee::continue_debugee(&obj);
         // });
 
         // debugee_thread
         //     .join()
         //     .expect("unable to join debugee thread");
 
-        // waitpid();
-        // cmd = String::new();
+        // TODO: In order to run the debugee program, we can use
+        // fexecve which is in nix crate.
+        // Simply continue_debugee
+        // and waitpid();
+        debugee::continue_debugee(bin)?;
+
         parse::get_next_cmd(&mut cmd)?;
-        parse::parse_cmd2(&cmd)?;
+        parse::parse_cmd2(&mut Ctx, &cmd)?;
     }
 }
