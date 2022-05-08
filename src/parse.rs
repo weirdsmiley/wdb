@@ -84,7 +84,7 @@ impl BreakPointTy {
     }
 
     pub(crate) fn dump(&self) -> String {
-        String::from("b")
+        self.line_no.to_string()
     }
 }
 
@@ -169,7 +169,7 @@ pub(crate) fn parse_cmd2<'a>(
             let breakpoint = v[1];
             ctx.BrCtx.insert(breakpoint)?;
             println!("Breakpoint set at {}", ctx.BrCtx.line_no);
-            dump!();
+            dump!(ctx.BrCtx);
             // println!("{}", ctx.BrCtx.dump());
         }
         Cmd::Run => {

@@ -11,19 +11,9 @@ macro_rules! instprint {
     ($($arg:tt)*) => {{}};
 }
 
-#[macro_use]
-macro_rules! say_hello {
-    () => {
-        // The macro will expand into the contents of this
-        block.
-            println!("Hello!");
-    };
-}
-
-#[macro_use]
 macro_rules! dump {
-    () => {
-        $crate::print!("\n")
+    ($var:expr) => {
+        println!("{}", $var.dump());
     };
-    ($($arg:tt)*) => {{}};
 }
+pub(crate) use dump;
