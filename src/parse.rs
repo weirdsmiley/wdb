@@ -1,9 +1,10 @@
 //! This module gets the next input command inside the debugger and parses
 //! it accordingly.
 use crate::debugger::Context;
+use crate::utils::*;
 use std::error::Error;
 use std::io::prelude::*;
-use crate::utils::*;
+use std::str::FromStr;
 
 // List of all supported commands in the debugger.
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -16,7 +17,7 @@ enum Cmd {
     Unknown,
 }
 
-// TODO: What was this for? If we are processing each command inside its 
+// TODO: What was this for? If we are processing each command inside its
 // own impl block then there is no use of a trait.
 trait CmdTy {
     fn process(self, Ctx: &mut Context);
@@ -58,33 +59,56 @@ impl FileTy {
 }
 
 pub(crate) struct BreakPointTy {
-    line_no: u32,
+    file: String,
+    line: u32,
     // mod_info: ModuleInfo,
 }
 
 impl BreakPointTy {
+    // TODO: Let us take the input str itself and use from_str to parse
+    // it.
     pub(crate) fn new(l: u32) -> Result<Self, Box<dyn Error>> {
-        Ok(BreakPointTy { line_no: l })
+        Ok(BreakPointTy {
+            file: "no idea".to_string(),
+            line: l,
+        })
     }
 
     // Get the line number from the path. The path is of format
     // 'file:line'.
-    pub(crate) fn parse(path: &str) -> u32 {
+    pub(crate) fn parse(path: &str) -> Result<(String, u32), Box<dyn Error>> {
+        // FIXME: Fix Error handling
         if path.is_empty() {
-            return 0;
+            return Ok((path.to_string(), 0));
         }
 
-        32
+        let (file, line) = path.trim_end().split_once(':').unwrap();
+
+        Ok((file.to_string(), line.parse::<u32>().unwrap()))
     }
 
     // Parse br and insert breakpoint to insert it to self.
     pub(crate) fn insert(&mut self, br: &str) -> Result<&mut Self, Box<dyn Error>> {
-        self.line_no = BreakPointTy::parse(br);
+        let (file, line) = BreakPointTy::parse(br).unwrap();
+
+        self.file = file;
+        self.line = line;
+
         Ok(self)
     }
 
     pub(crate) fn dump(&self) -> String {
-        self.line_no.to_string()
+        self.line.to_string()
+    }
+}
+
+impl FromStr for BreakPointTy {
+    type Err = std::string::ParseError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // get file name and line number
+        let (file, line) = BreakPointTy::parse(s).unwrap();
+
+        Ok(BreakPointTy { file, line })
     }
 }
 
@@ -168,7 +192,7 @@ pub(crate) fn parse_cmd2<'a>(
             let v: Vec<&str> = cmd.split_whitespace().collect();
             let breakpoint = v[1];
             ctx.BrCtx.insert(breakpoint)?;
-            println!("Breakpoint set at {}", ctx.BrCtx.line_no);
+            println!("Breakpoint set at {}:{}", ctx.BrCtx.file, ctx.BrCtx.line);
             dump!(ctx.BrCtx);
             // println!("{}", ctx.BrCtx.dump());
         }
