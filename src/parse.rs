@@ -103,10 +103,19 @@ impl BreakPointTy {
 
     // Parse br and insert breakpoint to insert it to self.
     pub(crate) fn insert(&mut self, br: &str) -> Result<&mut Self, Box<dyn Error>> {
-        let (file, line) = BreakPointTy::parse(br).unwrap();
-
-        self.file = file;
-        self.line = line;
+        match BreakPointTy::parse(br) {
+            Ok(parsed) => {
+                let (file, line) = parsed;
+                self.file = file;
+                self.line = line;
+            }
+            Err(_) => {
+                // FIXME: We should not exit if breakpoint format is not
+                // supported. It should just print the message and
+                // continue inputting next cmd.
+                println!("breakpoint format not supported");
+            }
+        }
 
         Ok(self)
     }
