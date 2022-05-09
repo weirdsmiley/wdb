@@ -3,8 +3,21 @@
 use crate::debugger::Context;
 use crate::utils::*;
 use std::error::Error;
+use std::fmt;
 use std::io::prelude::*;
 use std::str::FromStr;
+
+// Custom error handling, coz why not!
+#[derive(Debug)]
+struct rdbError(String);
+
+impl fmt::Display for rdbError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "(rdb): {}", self.0)
+    }
+}
+
+impl Error for rdbError {}
 
 // List of all supported commands in the debugger.
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -75,16 +88,17 @@ impl BreakPointTy {
     }
 
     // Get the line number from the path. The path is of format
-    // 'file:line'.
+    // 'file:line'. It should not exit with error if colon is not found.
     pub(crate) fn parse(path: &str) -> Result<(String, u32), Box<dyn Error>> {
-        // FIXME: Fix Error handling
-        if path.is_empty() {
-            return Ok((path.to_string(), 0));
+        match path.trim().split_once(':') {
+            Some(iter) => {
+                let (file, line) = iter;
+                return Ok((file.to_string(), line.parse::<u32>().unwrap()));
+            }
+            None => {
+                return Err(Box::new(rdbError("breakpoint not parsed".into())));
+            }
         }
-
-        let (file, line) = path.trim_end().split_once(':').unwrap();
-
-        Ok((file.to_string(), line.parse::<u32>().unwrap()))
     }
 
     // Parse br and insert breakpoint to insert it to self.
