@@ -82,7 +82,7 @@ impl BreakPointTy {
     // it.
     pub(crate) fn new(l: u32) -> Result<Self, Box<dyn Error>> {
         Ok(BreakPointTy {
-            file: "no idea".to_string(),
+            file: "".to_string(),
             line: l,
         })
     }
@@ -108,16 +108,12 @@ impl BreakPointTy {
                 let (file, line) = parsed;
                 self.file = file;
                 self.line = line;
+                return Ok(self);
             }
             Err(_) => {
-                // FIXME: We should not exit if breakpoint format is not
-                // supported. It should just print the message and
-                // continue inputting next cmd.
-                println!("breakpoint format not supported");
+                return Err(Box::new(rdbError("could not insert breakpoint".into())));
             }
         }
-
-        Ok(self)
     }
 
     pub(crate) fn dump(&self) -> String {
@@ -214,10 +210,14 @@ pub(crate) fn parse_cmd2<'a>(
         Cmd::BreakPoint => {
             let v: Vec<&str> = cmd.split_whitespace().collect();
             let breakpoint = v[1];
-            ctx.BrCtx.insert(breakpoint)?;
-            println!("Breakpoint set at {}:{}", ctx.BrCtx.file, ctx.BrCtx.line);
-            dump!(ctx.BrCtx);
-            // println!("{}", ctx.BrCtx.dump());
+            match ctx.BrCtx.insert(breakpoint) {
+                Ok(x) => {
+                    println!("breakpoint set at {}:{}", ctx.BrCtx.file, ctx.BrCtx.line);
+                }
+                Err(_) => {
+                    println!("breakpoint format not supported");
+                }
+            };
         }
         Cmd::Run => {
             println!("Running...");
