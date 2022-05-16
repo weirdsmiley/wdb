@@ -1,5 +1,5 @@
-use crate::commands::CmdTy;
 use crate::debugger::Context;
+use crate::utils::rdbError;
 use std::error::Error;
 
 pub(crate) struct RunTy {
@@ -22,8 +22,14 @@ impl RunTy {
     }
 }
 
-impl CmdTy for RunTy {
-    fn process(self, Ctx: &mut Context) {
+impl crate::commands::CmdTy for RunTy {
+    fn process(&mut self) -> Result<(), Box<dyn Error>> {
         // start running the debugee until next interrupt is occurred
+        println!("Running...");
+        match self.run() {
+            Ok(r) => Ok(()),
+            // FIXME: Why should we match with **any** error?
+            Err(_) => Err(Box::new(rdbError("unable to continue debugee".into()))),
+        }
     }
 }

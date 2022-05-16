@@ -43,13 +43,10 @@ pub(crate) fn parse_cmd<'a>(
     }
 
     match which_cmd(cmd) {
-        // TODO: which_cmd should return the already built object and
-        // here we can pattern match to find if it is of the appropriate
-        // struct or not.
         Cmd::BreakPoint => {
             let v: Vec<&str> = cmd.split_whitespace().collect();
             let breakpoint = v[1];
-            // This processing shouuld happen inside CmdTy trait's process
+            // This processing should happen inside CmdTy trait's process
             // method.
             match ctx.BrCtx.insert(breakpoint) {
                 Ok(x) => {
@@ -61,8 +58,7 @@ pub(crate) fn parse_cmd<'a>(
             };
         }
         Cmd::Run => {
-            println!("Running...");
-            ctx.RCtx.run()?;
+            ctx.RCtx.process()?;
         }
         Cmd::Quit => {
             std::process::exit(0);

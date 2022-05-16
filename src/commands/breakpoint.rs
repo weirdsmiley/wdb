@@ -66,8 +66,9 @@ impl std::str::FromStr for BreakPointTy {
 
 impl crate::commands::CmdTy for BreakPointTy {
     // TODO: This should handle what which_cmd is doing.
-    fn process(self, Ctx: &mut Context) {
+    fn process(&mut self) -> Result<(), Box<dyn Error>> {
         // assign breakpoint (replace first byte of current instruction
         // with 0xcc
+        Ok(())
     }
 }
