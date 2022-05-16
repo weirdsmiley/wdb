@@ -1,15 +1,24 @@
+//! rdb is a debugger ideally suited for any ELF binary which can be
+//! executed on an x86_64 machine.
+#![allow(
+    non_snake_case,
+    dead_code,
+    unused_imports,
+    unused_variables,
+    non_camel_case_types,
+    unused_macros
+)]
 use object::Object;
-use std::env;
-use std::error::Error;
-use std::fs;
 use std::process;
+use std::{env, fs};
 
+mod commands;
 mod debugee;
 mod debugger;
 mod parse;
 mod utils;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     if args.len() <= 1 {
         eprintln!("file not found");

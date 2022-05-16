@@ -1,28 +1,32 @@
 //! This module focuses solely on the debugger.
 use crate::debugee;
 use crate::parse;
-use std::error::Error;
+// TODO: Parallelize continue_debugee
+use crate::commands::*;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
 // This stores all other structs defined in parse.rs
 // FIXME: Remove all structs' pub visibility.
 pub(crate) struct Context {
-    pub ModInfo: parse::ModuleInfo,
-    pub FCtx: parse::FileTy,
-    pub BrCtx: parse::BreakPointTy,
-    pub RCtx: parse::RunTy,
+    pub(crate) ModInfo: module::ModuleInfo,
+    pub(crate) FCtx: file::FileTy,
+    pub(crate) BrCtx: breakpoint::BreakPointTy,
+    pub(crate) RCtx: run::RunTy,
 }
 
 impl Context {
     // Should this return Error ype otherwise too?
     // Why should it contain dyn?
-    pub(crate) fn new(src: &'static str, bin: &'static str) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn new(
+        src: &'static str,
+        bin: &'static str,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Context {
-            ModInfo: parse::ModuleInfo::new(src, bin)?,
-            FCtx: parse::FileTy::new("").unwrap(),
-            BrCtx: parse::BreakPointTy::new(0).unwrap(),
-            RCtx: parse::RunTy::new(false, 0).unwrap(),
+            ModInfo: module::ModuleInfo::new(src, bin)?,
+            FCtx: file::FileTy::new("").unwrap(),
+            BrCtx: breakpoint::BreakPointTy::new(0).unwrap(),
+            RCtx: run::RunTy::new(false, 0).unwrap(),
         })
     }
 }
@@ -41,7 +45,10 @@ impl Context {
 //      waitpid() // but we are still waiting for the debugee to stop
 //                // essentially a sequential program
 //      SIGTRAP returned, breakpoint hit, dump source line
-pub(crate) fn init_debugger(bin: &Vec<u8>, obj: &object::File) -> Result<(), Box<dyn Error>> {
+pub(crate) fn init_debugger(
+    bin: &Vec<u8>,
+    obj: &object::File,
+) -> Result<(), Box<dyn std::error::Error>> {
     // use .text section to get the instructions
     // if let Some(section) = obj.section_by_name(".text") {
     //     instprint!("{:#x?}", section.data()?);
@@ -50,12 +57,12 @@ pub(crate) fn init_debugger(bin: &Vec<u8>, obj: &object::File) -> Result<(), Box
     // }
     // println!("{:#x?}", bin);
 
-    // FIXME: This is not actually correct!
+    // FIXME: Find the source filename from the ELF header.
     let mut Ctx: Context = Context::new("main.rs", "bin")?;
 
     let mut cmd = String::new();
     parse::get_next_cmd(&mut cmd)?;
-    parse::parse_cmd2(&mut Ctx, &cmd)?;
+    parse::parse_cmd(&mut Ctx, &cmd)?;
 
     loop {
         // This has to be the modified binary (that is binary after
@@ -82,6 +89,6 @@ pub(crate) fn init_debugger(bin: &Vec<u8>, obj: &object::File) -> Result<(), Box
         debugee::continue_debugee(bin)?;
 
         parse::get_next_cmd(&mut cmd)?;
-        parse::parse_cmd2(&mut Ctx, &cmd)?;
+        parse::parse_cmd(&mut Ctx, &cmd)?;
     }
 }
