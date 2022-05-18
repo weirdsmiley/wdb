@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 // This stores all other structs defined in parse.rs
-// FIXME: Remove all structs' pub visibility.
+// Should this be made into a DAG?
 pub(crate) struct Context {
     pub(crate) ModInfo: module::ModuleInfo,
     pub(crate) FCtx: file::FileTy,
@@ -61,10 +61,11 @@ pub(crate) fn init_debugger(
     let mut Ctx: Context = Context::new("main.rs", "bin")?;
 
     let mut cmd = String::new();
-    parse::get_next_cmd(&mut cmd)?;
-    parse::parse_cmd(&mut Ctx, &cmd)?;
 
     loop {
+        parse::get_next_cmd(&mut cmd)?;
+        parse::parse_cmd(&mut Ctx, &cmd)?;
+
         // This has to be the modified binary (that is binary after
         // inserting 0xcc at appropriate place).
         // TODO: Move this in new thread. and to wait for this particular
@@ -87,8 +88,5 @@ pub(crate) fn init_debugger(
         // Simply continue_debugee
         // and waitpid();
         debugee::continue_debugee(bin)?;
-
-        parse::get_next_cmd(&mut cmd)?;
-        parse::parse_cmd(&mut Ctx, &cmd)?;
     }
 }

@@ -65,10 +65,22 @@ impl std::str::FromStr for BreakPointTy {
 }
 
 impl crate::commands::CmdTy for BreakPointTy {
-    // TODO: This should handle what which_cmd is doing.
-    fn process(&mut self) -> Result<(), Box<dyn Error>> {
-        // assign breakpoint (replace first byte of current instruction
-        // with 0xcc
+    type cmd = String;
+    fn process(&mut self, c: Self::cmd) -> Result<(), Box<dyn Error>> {
+        // Assign breakpoint (replace first byte of current instruction
+        // with 0xcc.
+        let v: Vec<&str> = c.split_whitespace().collect();
+        let breakpoint = v[1];
+        // This processing should happen inside CmdTy trait's process
+        // method.
+        match self.insert(breakpoint) {
+            Ok(x) => {
+                println!("breakpoint set at {}:{}", self.file, self.line);
+            }
+            Err(_) => {
+                println!("breakpoint format not supported");
+            }
+        };
         Ok(())
     }
 }

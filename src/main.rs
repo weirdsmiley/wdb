@@ -6,7 +6,7 @@
     unused_imports,
     unused_variables,
     non_camel_case_types,
-    unused_macros
+    unused_macros,
 )]
 use object::Object;
 use std::process;

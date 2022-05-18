@@ -22,11 +22,12 @@ use std::io::prelude::*;
 fn which_cmd(cmd: &str) -> Cmd {
     let v: Vec<&str> = cmd.split_whitespace().collect();
 
-    // FIXME: Improve regex matching
+    // TODO: Improve regex matching
     match v[0] {
         "b" | "br" => return Cmd::BreakPoint,
         "r" => return Cmd::Run,
         "q" => return Cmd::Quit,
+        "h" => return Cmd::Help,
         _ => return Cmd::Unknown,
     }
 }
@@ -37,31 +38,27 @@ pub(crate) fn parse_cmd<'a>(
     ctx: &'a mut Context,
     cmd: &String,
 ) -> Result<&'a mut Context, Box<dyn Error>> {
-    // Bypassing Ctrl-d to prevent exiting
-    if cmd.is_empty() {
+    // Bypassing Ctrl-d to prevent exiting and empty inputs.
+    if cmd.is_empty() || cmd == "\n" {
         return Ok(ctx);
     }
 
+    // cmd is being passed around twice if only newline is hit
     match which_cmd(cmd) {
         Cmd::BreakPoint => {
-            let v: Vec<&str> = cmd.split_whitespace().collect();
-            let breakpoint = v[1];
-            // This processing should happen inside CmdTy trait's process
-            // method.
-            match ctx.BrCtx.insert(breakpoint) {
-                Ok(x) => {
-                    println!("breakpoint set at {}:{}", ctx.BrCtx.file, ctx.BrCtx.line);
-                }
-                Err(_) => {
-                    println!("breakpoint format not supported");
-                }
-            };
+            // TODO: Can this be passed as reference? Is GAT coming in
+            // picture?
+            ctx.BrCtx.process(cmd.clone())?;
         }
         Cmd::Run => {
-            ctx.RCtx.process()?;
+            ctx.RCtx.process(None)?;
         }
         Cmd::Quit => {
             std::process::exit(0);
+        }
+        Cmd::Help => {
+            // use dump!()
+            println!("There is no help! Bye :')");
         }
         Cmd::Unknown => {
             eprintln!("unknown command");
@@ -79,10 +76,6 @@ pub(crate) fn get_next_cmd(input: &mut String) -> Result<&mut String, Box<dyn Er
 
     let stdin = std::io::stdin();
     stdin.read_line(input)?;
-
-    if input == "\n" {
-        *input = prev_input.clone();
-    }
 
     Ok(input)
 }

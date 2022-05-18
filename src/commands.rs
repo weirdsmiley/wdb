@@ -15,7 +15,7 @@ pub(crate) enum Cmd {
     BreakPoint,
     Run,
     Quit,
-    // Help,
+    Help,
     // Print,
     Unknown,
 }
@@ -28,5 +28,7 @@ pub(crate) enum Cmd {
 // rather infer parent structs from inside of CmdTy. Then should it return
 // Result<(), Error>?
 pub(crate) trait CmdTy {
-    fn process<'a>(&mut self) -> Result<(), Box<dyn Error>>;
+    // declare a type which stores the current cmd (raw)
+    type cmd;
+    fn process<'a>(&mut self, c: Self::cmd) -> Result<(), Box<dyn Error>>;
 }
