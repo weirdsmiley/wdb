@@ -6,8 +6,9 @@
     unused_imports,
     unused_variables,
     non_camel_case_types,
-    unused_macros,
+    unused_macros
 )]
+use crate::utils::rdbError;
 use object::Object;
 use std::process;
 use std::{env, fs};
@@ -21,8 +22,11 @@ mod utils;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     if args.len() <= 1 {
-        eprintln!("file not found");
-        process::exit(1);
+        // TODO: 1. Dump error gracefully.
+        //       2. What about returning Box?
+        let err = rdbError("file not found".into());
+        eprintln!("{}", err);
+        return Err(Box::new(err));
     }
     let bin = fs::read(&args[1])?;
     let obj = object::File::parse(&*bin)?;

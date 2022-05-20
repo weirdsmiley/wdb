@@ -26,6 +26,7 @@ impl BreakPointTy {
         match path.trim().split_once(':') {
             Some(iter) => {
                 let (file, line) = iter;
+                // FIXME: Do not unwrap on non-integer values.
                 return Ok((file.to_string(), line.parse::<u32>().unwrap()));
             }
             None => {
@@ -82,5 +83,31 @@ impl crate::commands::CmdTy for BreakPointTy {
             }
         };
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_BreakPointTy() {
+        // test parse()
+        let brk_t = BreakPointTy {
+            file: "file".into(),
+            line: 123,
+        };
+        match BreakPointTy::parse("file:123") {
+            Ok(x) => {}
+            Err(_) => {
+                eprintln!("test_BreakPointTy failed");
+            }
+        }
+        match BreakPointTy::parse("file:abc") {
+            Ok(x) => {}
+            Err(_) => {
+                eprintln!("test_BreakPointTy failed");
+            }
+        }
     }
 }

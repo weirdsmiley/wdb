@@ -79,3 +79,21 @@ pub(crate) fn get_next_cmd(input: &mut String) -> Result<&mut String, Box<dyn Er
 
     Ok(input)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_which_cmd() {
+        assert_eq!(which_cmd("b test.rs:345"), Cmd::BreakPoint);
+        assert_eq!(which_cmd("br test.rs:345"), Cmd::BreakPoint);
+        assert_eq!(which_cmd("r"), Cmd::Run);
+        assert_eq!(which_cmd("q"), Cmd::Quit);
+        assert_eq!(which_cmd("h"), Cmd::Help);
+        assert_eq!(which_cmd("break"), Cmd::Unknown);
+        assert_eq!(which_cmd("run"), Cmd::Unknown);
+        assert_eq!(which_cmd("quit"), Cmd::Unknown);
+        assert_eq!(which_cmd("help"), Cmd::Unknown);
+    }
+}

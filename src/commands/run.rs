@@ -34,3 +34,29 @@ impl crate::commands::CmdTy for RunTy {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_RunTy() {
+        let mut not_running = RunTy {
+            is_running: false,
+            pc: 0,
+        };
+        let first_run = RunTy {
+            is_running: true,
+            pc: 1,
+        };
+        match not_running.run() {
+            Ok(x) => {
+                assert!(not_running.is_running);
+                assert!(not_running.pc == first_run.pc);
+            }
+            Err(_) => {
+                eprintln!("test_RunTy failed");
+            }
+        }
+    }
+}

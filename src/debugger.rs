@@ -57,7 +57,6 @@ pub(crate) fn init_debugger(
     // }
     // println!("{:#x?}", bin);
 
-    // FIXME: Find the source filename from the ELF header.
     let mut Ctx: Context = Context::new("main.rs", "bin")?;
 
     let mut cmd = String::new();

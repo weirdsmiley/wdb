@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 object = "0.28.3"
 nix = "0.24.1"
+gimli = "0.26.1"
