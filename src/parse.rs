@@ -8,17 +8,6 @@ use std::io::prelude::*;
 
 // Returns the appropriate command (struct object?) which then can be
 // used for do processing.
-// Or can we return a tuple (enum, struct object) just match the fist
-// element to find the type and object can be used later
-// TODO: Can we do it with a Result<Box<trait>>? All we need to return is
-// a built object of certain CmdTy and all its implemented methods.
-// This can never take an empty/unknown command. So we can simply return
-// Box over dynamically dispatched trait CmdTy.
-// This is becoming more of a do_cmd (over Context) instead of showing only
-// which.
-// Want to make it generic as it returns?
-// NOTE: The processing part should be handled by the CmdTy trait's process
-// method.
 fn which_cmd(cmd: &str) -> Cmd {
     let v: Vec<&str> = cmd.split_whitespace().collect();
 

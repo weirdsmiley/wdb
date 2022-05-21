@@ -29,7 +29,6 @@ impl crate::commands::CmdTy for RunTy {
         println!("Running...");
         match self.run() {
             Ok(r) => Ok(()),
-            // FIXME: Why should we match with **any** error?
             Err(_) => Err(Box::new(rdbError("unable to continue debugee".into()))),
         }
     }

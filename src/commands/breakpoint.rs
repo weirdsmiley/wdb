@@ -3,6 +3,7 @@
 use crate::debugger::Context;
 use crate::utils::rdbError;
 use std::error::Error;
+use std::io::ErrorKind;
 
 pub(crate) struct BreakPointTy {
     pub(crate) file: String,
@@ -26,7 +27,12 @@ impl BreakPointTy {
         match path.trim().split_once(':') {
             Some(iter) => {
                 let (file, line) = iter;
-                // FIXME: Do not unwrap on non-integer values.
+                if let Err(parsed_line) = line.parse::<u32>() {
+                    return Err(Box::new(rdbError(
+                        "ParseIntError while setting breakpoint".into(),
+                    )));
+                }
+
                 return Ok((file.to_string(), line.parse::<u32>().unwrap()));
             }
             None => {
@@ -78,7 +84,16 @@ impl crate::commands::CmdTy for BreakPointTy {
             Ok(x) => {
                 println!("breakpoint set at {}:{}", self.file, self.line);
             }
-            Err(_) => {
+            Err(error) => {
+                // TODO: Implement enum class for rdbErrorKind and match
+                // against those values.
+                // match error.as_ref() {
+                // rdbError("".into()) => {
+
+                // },
+                // _ => {
+                //     eprintln!("breakpoint format not supported");
+                // }
                 println!("breakpoint format not supported");
             }
         };

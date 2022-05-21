@@ -4,7 +4,7 @@
 use std::fmt;
 
 #[macro_export]
-// TODO: Print such that each 'instruction' is on new line.
+/// Print such that each 'instruction' is on new line.
 macro_rules! instprint {
     () => {
         $crate::print!("\n")
@@ -12,6 +12,8 @@ macro_rules! instprint {
     ($($arg:tt)*) => {{}};
 }
 
+/// Provides a primitive macro for dumping objects (if dump is
+/// implemented).
 macro_rules! dump {
     ($var:expr) => {
         println!("{}", $var.dump());
@@ -19,7 +21,7 @@ macro_rules! dump {
 }
 pub(crate) use dump;
 
-// This macro provides a custom error handling for rdb.
+/// This provides a custom error handling for rdb.
 #[derive(Debug)]
 pub(crate) struct rdbError(pub(crate) String);
 
@@ -30,3 +32,11 @@ impl fmt::Display for rdbError {
 }
 
 impl std::error::Error for rdbError {}
+
+// TODO:
+/// Declare all possible kinds of errors for the debugger.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum rdbErrorKind {
+    /// Breakpoint being parsed runs into an error.
+    BreakPointParseError,
+}
