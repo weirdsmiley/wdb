@@ -83,7 +83,7 @@ impl crate::commands::CmdTy for BreakPointTy {
         match self.insert(breakpoint) {
             Ok(x) => {
                 println!("breakpoint set at {}:{}", self.file, self.line);
-            },
+            }
             Err(error) => {
                 // TODO: Implement enum class for rdbErrorKind and match
                 // against those values.
