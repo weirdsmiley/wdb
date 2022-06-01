@@ -1,3 +1,4 @@
+use crate::debugee;
 use crate::debugger::Context;
 use crate::utils::rdbError;
 use std::error::Error;
@@ -27,6 +28,10 @@ impl crate::commands::CmdTy for RunTy {
     fn process(&mut self, cmd: Self::cmd) -> Result<(), Box<dyn Error>> {
         // start running the debugee until next interrupt is occurred
         println!("Running...");
+        // FIXME: Fix the binary context.
+        let bin = vec![];
+        debugee::continue_debugee(&bin)?;
+        // FIXME: Return type should be derived from continue_debugee.
         match self.run() {
             Ok(r) => Ok(()),
             Err(_) => Err(Box::new(rdbError("unable to continue debugee".into()))),

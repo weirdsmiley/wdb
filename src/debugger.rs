@@ -86,6 +86,7 @@ pub(crate) fn init_debugger(
         // fexecve which is in nix crate.
         // Simply continue_debugee
         // and waitpid();
-        debugee::continue_debugee(bin)?;
+        // This should be when 'run' command is hit.
+        // debugee::continue_debugee(bin)?;
     }
 }
