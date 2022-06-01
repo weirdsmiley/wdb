@@ -1,5 +1,5 @@
 [package]
-name = "rdb"
+name = "wdb"
 version = "0.1.0"
 description = "A debugger for C."
 edition = "2021"
@@ -7,7 +7,7 @@ exclude = ["/.github"]
 keywords = ["debugger", "ELF"]
 license = "GPL-3.0"
 readme = "./README.md"
-repository = "https://github.com/weirdsmiley/rdb"
+repository = "https://github.com/weirdsmiley/wdb"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

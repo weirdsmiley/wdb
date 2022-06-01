@@ -1,6 +1,6 @@
 use crate::debugee;
 use crate::debugger::Context;
-use crate::utils::rdbError;
+use crate::utils::wdbError;
 use std::error::Error;
 
 pub(crate) struct RunTy {
@@ -34,7 +34,7 @@ impl crate::commands::CmdTy for RunTy {
         // FIXME: Return type should be derived from continue_debugee.
         match self.run() {
             Ok(r) => Ok(()),
-            Err(_) => Err(Box::new(rdbError("unable to continue debugee".into()))),
+            Err(_) => Err(Box::new(wdbError("unable to continue debugee".into()))),
         }
     }
 }

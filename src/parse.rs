@@ -60,7 +60,7 @@ pub(crate) fn get_next_cmd(input: &mut String) -> Result<&mut String, Box<dyn Er
     let prev_input = input.clone();
     *input = String::new();
 
-    print!("(rdb): ");
+    print!("(wdb): ");
     std::io::stdout().flush()?;
 
     let stdin = std::io::stdin();

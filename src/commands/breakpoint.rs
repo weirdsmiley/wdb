@@ -1,7 +1,7 @@
 //! This submodule performs all handling for breakpoint command in the
 //! available in the debugger.
 use crate::debugger::Context;
-use crate::utils::rdbError;
+use crate::utils::wdbError;
 use std::error::Error;
 use std::io::ErrorKind;
 
@@ -28,7 +28,7 @@ impl BreakPointTy {
             Some(iter) => {
                 let (file, line) = iter;
                 if let Err(parsed_line) = line.parse::<u32>() {
-                    return Err(Box::new(rdbError(
+                    return Err(Box::new(wdbError(
                         "ParseIntError while setting breakpoint".into(),
                     )));
                 }
@@ -36,7 +36,7 @@ impl BreakPointTy {
                 return Ok((file.to_string(), line.parse::<u32>().unwrap()));
             }
             None => {
-                return Err(Box::new(rdbError("breakpoint not parsed".into())));
+                return Err(Box::new(wdbError("breakpoint not parsed".into())));
             }
         }
     }
@@ -51,7 +51,7 @@ impl BreakPointTy {
                 return Ok(self);
             }
             Err(_) => {
-                return Err(Box::new(rdbError("could not insert breakpoint".into())));
+                return Err(Box::new(wdbError("could not insert breakpoint".into())));
             }
         }
     }
@@ -85,10 +85,10 @@ impl crate::commands::CmdTy for BreakPointTy {
                 println!("breakpoint set at {}:{}", self.file, self.line);
             }
             Err(error) => {
-                // TODO: Implement enum class for rdbErrorKind and match
+                // TODO: Implement enum class for wdbErrorKind and match
                 // against those values.
                 // match error.as_ref() {
-                // rdbError("".into()) => {
+                // wdbError("".into()) => {
 
                 // },
                 // _ => {

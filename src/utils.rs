@@ -21,22 +21,22 @@ macro_rules! dump {
 }
 pub(crate) use dump;
 
-/// This provides a custom error handling for rdb.
+/// This provides a custom error handling for wdb.
 #[derive(Debug)]
-pub(crate) struct rdbError(pub(crate) String);
+pub(crate) struct wdbError(pub(crate) String);
 
-impl fmt::Display for rdbError {
+impl fmt::Display for wdbError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(rdb): {}", self.0)
+        write!(f, "(wdb): {}", self.0)
     }
 }
 
-impl std::error::Error for rdbError {}
+impl std::error::Error for wdbError {}
 
 // TODO:
 /// Declare all possible kinds of errors for the debugger.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum rdbErrorKind {
+pub(crate) enum wdbErrorKind {
     /// Breakpoint being parsed runs into an error.
     BreakPointParseError,
 }

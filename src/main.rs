@@ -1,4 +1,4 @@
-//! rdb is a debugger ideally suited for any ELF binary which can be
+//! wdb is a debugger ideally suited for any ELF binary which can be
 //! executed on an x86_64 machine.
 #![allow(
     non_snake_case,
@@ -8,7 +8,7 @@
     non_camel_case_types,
     unused_macros
 )]
-use crate::utils::rdbError;
+use crate::utils::wdbError;
 use object::Object;
 use std::process;
 use std::{env, fs};
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.len() <= 1 {
         // TODO: 1. Dump error gracefully.
         //       2. What about returning Box?
-        let err = rdbError("file not found".into());
+        let err = wdbError("file not found".into());
         eprintln!("{}", err);
         return Err(Box::new(err));
     }
