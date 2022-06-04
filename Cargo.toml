@@ -8,6 +8,7 @@ keywords = ["debugger", "ELF"]
 license = "GPL-3.0"
 readme = "./README.md"
 repository = "https://github.com/weirdsmiley/wdb"
+publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
