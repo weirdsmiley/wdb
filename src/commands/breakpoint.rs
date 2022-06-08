@@ -77,6 +77,11 @@ impl crate::commands::CmdTy for BreakPointTy {
         // Assign breakpoint (replace first byte of current instruction
         // with 0xcc.
         let v: Vec<&str> = c.split_whitespace().collect();
+        if v.len() == 1 {
+            // TODO: Use wdbError.
+            eprintln!("usage: br file:line");
+            return Ok(());
+        }
         let breakpoint = v[1];
         // This processing should happen inside CmdTy trait's process
         // method.
