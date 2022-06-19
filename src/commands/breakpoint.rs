@@ -1,7 +1,7 @@
 //! This submodule performs all handling for breakpoint command in the
 //! available in the debugger.
 use crate::debugger::Context;
-use crate::utils::wdbError;
+use crate::utils::{wdbError, wdbErrorKind};
 use std::error::Error;
 use std::io::ErrorKind;
 
@@ -80,7 +80,8 @@ impl crate::commands::CmdTy for BreakPointTy {
         if v.len() == 1 {
             // TODO: Use wdbError.
             eprintln!("usage: br file:line");
-            return Ok(());
+            let err = wdbError("incorrect usage".into());
+            return Err(Box::new(err));
         }
         let breakpoint = v[1];
         // This processing should happen inside CmdTy trait's process
@@ -99,7 +100,7 @@ impl crate::commands::CmdTy for BreakPointTy {
                 // _ => {
                 //     eprintln!("breakpoint format not supported");
                 // }
-                println!("breakpoint format not supported");
+                return Err(Box::new(wdbErrorKind::BreakPointParseError));
             }
         };
         Ok(())

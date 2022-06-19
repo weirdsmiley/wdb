@@ -1,6 +1,6 @@
 use crate::debugee;
 use crate::debugger::Context;
-use crate::utils::wdbError;
+use crate::utils::{wdbError, wdbErrorKind};
 use std::error::Error;
 
 pub(crate) struct RunTy {
@@ -17,6 +17,10 @@ impl RunTy {
     }
 
     pub(crate) fn run(&mut self) -> Result<&mut Self, Box<dyn Error>> {
+        self.pc = u32::MAX;
+        if (self.pc).checked_add(1) == None {
+            return Err(Box::new(wdbErrorKind::RunPCOverflowError));
+        }
         self.is_running = true;
         self.pc += 1;
         Ok(self)
@@ -31,10 +35,11 @@ impl crate::commands::CmdTy for RunTy {
         // FIXME: Fix the binary context.
         let bin = vec![];
         debugee::continue_debugee(&bin)?;
+
         // FIXME: Return type should be derived from continue_debugee.
         match self.run() {
             Ok(r) => Ok(()),
-            Err(_) => Err(Box::new(wdbError("unable to continue debugee".into()))),
+            Err(e) => Err(e),
         }
     }
 }

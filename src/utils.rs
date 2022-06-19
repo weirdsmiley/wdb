@@ -21,6 +21,14 @@ macro_rules! dump {
 }
 pub(crate) use dump;
 
+/// This primitive provides an error dumping for wdbErrorKinds.
+macro_rules! edump {
+    ($var:expr) => {
+        eprintln!("{}", $var);
+    };
+}
+pub(crate) use edump;
+
 /// This provides a custom error handling for wdb.
 #[derive(Debug)]
 pub(crate) struct wdbError(pub(crate) String);
@@ -33,10 +41,35 @@ impl fmt::Display for wdbError {
 
 impl std::error::Error for wdbError {}
 
-// TODO:
+// FIXME: Is this making wdbError redundant? Notice, wdbErrorKind is for
+// specific and identified error types, but wdbError is for absolute error
+// custome types.
+// TODO: Distinguishing between errors and warnings. Errors will terminate
+// the debugger's loop, but warnings should help the developer, and allow
+// the debugger to proceed.
 /// Declare all possible kinds of errors for the debugger.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum wdbErrorKind {
     /// Breakpoint being parsed runs into an error.
     BreakPointParseError,
+    RunPCOverflowError,
 }
+
+impl fmt::Display for wdbErrorKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // TODO: This will handle all the kinds of errors and their
+        // displays. Remember, these are only for writing and not exiting.
+        // The decision of whether to exit (debugger) or not is dependant
+        // on the invoker.
+        return match self {
+            wdbErrorKind::BreakPointParseError => {
+                write!(f, "breakpoint: BreakPointParseError")
+            }
+            wdbErrorKind::RunPCOverflowError => {
+                write!(f, "run: Program counter has overflowed!")
+            }
+        };
+    }
+}
+
+impl std::error::Error for wdbErrorKind {}
