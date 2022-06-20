@@ -37,14 +37,10 @@ pub(crate) fn parse_cmd<'a>(
         Cmd::BreakPoint => {
             // TODO: Can this be passed as reference? Is GAT coming in
             // picture?
-            if let Err(err) = ctx.BrCtx.process(cmd.clone()) {
-                edump!(err);
-            }
+            ctx.BrCtx.process(cmd.clone())?;
         }
         Cmd::Run => {
-            if let Err(err) = ctx.RCtx.process(None) {
-                edump!(err);
-            }
+            ctx.RCtx.process(None)?;
         }
         Cmd::Quit => {
             std::process::exit(0);

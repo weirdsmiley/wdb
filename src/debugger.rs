@@ -1,5 +1,6 @@
 //! This module focuses solely on the debugger.
 use crate::commands::*;
+use crate::utils::edump;
 use crate::debugee;
 use crate::parse;
 // TODO: Parallelize continue_debugee
@@ -63,7 +64,10 @@ pub(crate) fn init_debugger(
 
     loop {
         parse::get_next_cmd(&mut cmd)?;
-        parse::parse_cmd(&mut Ctx, &cmd)?;
+
+        if let Err(err) = parse::parse_cmd(&mut Ctx, &cmd) {
+            edump!(err);
+        };
 
         // This has to be the modified binary (that is binary after
         // inserting 0xcc at appropriate place).
