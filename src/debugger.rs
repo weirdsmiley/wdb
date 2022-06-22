@@ -1,8 +1,8 @@
 //! This module focuses solely on the debugger.
 use crate::commands::*;
-use crate::utils::edump;
 use crate::debugee;
 use crate::parse;
+use crate::utils::edump;
 // TODO: Parallelize continue_debugee
 use std::sync::{Arc, Mutex};
 use std::thread;

@@ -28,15 +28,13 @@ impl BreakPointTy {
             Some(iter) => {
                 let (file, line) = iter;
                 if let Err(parsed_line) = line.parse::<u32>() {
-                    return Err(Box::new(wdbError(
-                        "ParseIntError while setting breakpoint".into(),
-                    )));
+                    return Err(Box::new(wdbErrorKind::BreakPointParseIntError));
                 }
 
                 return Ok((file.to_string(), line.parse::<u32>().unwrap()));
             }
             None => {
-                return Err(Box::new(wdbError("breakpoint not parsed".into())));
+                return Err(Box::new(wdbErrorKind::BreakPointParseError));
             }
         }
     }
@@ -50,8 +48,8 @@ impl BreakPointTy {
                 self.line = line;
                 return Ok(self);
             }
-            Err(_) => {
-                return Err(Box::new(wdbError("could not insert breakpoint".into())));
+            Err(err) => {
+                return Err(err);
             }
         }
     }
@@ -77,12 +75,11 @@ impl crate::commands::CmdTy for BreakPointTy {
         // Assign breakpoint (replace first byte of current instruction
         // with 0xcc.
         let v: Vec<&str> = c.split_whitespace().collect();
+
         if v.len() == 1 {
-            // TODO: Use wdbError.
-            eprintln!("usage: br file:line");
-            let err = wdbError("incorrect usage".into());
-            return Err(Box::new(err));
+            return Err(Box::new(wdbErrorKind::BreakPointIUError));
         }
+
         let breakpoint = v[1];
         // This processing should happen inside CmdTy trait's process
         // method.
@@ -90,7 +87,7 @@ impl crate::commands::CmdTy for BreakPointTy {
             Ok(x) => {
                 println!("breakpoint set at {}:{}", self.file, self.line);
             }
-            Err(error) => {
+            Err(err) => {
                 // TODO: Implement enum class for wdbErrorKind and match
                 // against those values.
                 // match error.as_ref() {
@@ -100,7 +97,7 @@ impl crate::commands::CmdTy for BreakPointTy {
                 // _ => {
                 //     eprintln!("breakpoint format not supported");
                 // }
-                return Err(Box::new(wdbErrorKind::BreakPointParseError));
+                return Err(err);
             }
         };
         Ok(())
@@ -118,15 +115,19 @@ mod tests {
             file: "file".into(),
             line: 123,
         };
+        // FIXME: Match with appropriate wdbErrorKind(s). Also, if
+        // wdbErrorKind is static in nature then should we allocate those
+        // errors on heap (using Box)? Should it not be better to have
+        // static error return types in Results.
         match BreakPointTy::parse("file:123") {
             Ok(x) => {}
-            Err(_) => {
+            Err(e) => {
                 eprintln!("test_BreakPointTy failed");
             }
         }
         match BreakPointTy::parse("file:abc") {
             Ok(x) => {}
-            Err(_) => {
+            Err(e) => {
                 eprintln!("test_BreakPointTy failed");
             }
         }

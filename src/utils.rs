@@ -51,7 +51,10 @@ impl std::error::Error for wdbError {}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum wdbErrorKind {
     /// Breakpoint being parsed runs into an error.
+    BreakPointIUError, // Incorrect usage
     BreakPointParseError,
+    BreakPointParseIntError,
+    RunIUError,
     RunPCOverflowError,
 }
 
@@ -62,9 +65,18 @@ impl fmt::Display for wdbErrorKind {
         // The decision of whether to exit (debugger) or not is dependant
         // on the invoker.
         return match self {
+            wdbErrorKind::BreakPointIUError => {
+                write!(f, "usage: br[eakpoint] <file>:<line>")
+            },
             wdbErrorKind::BreakPointParseError => {
-                write!(f, "breakpoint: BreakPointParseError")
+                write!(f, "breakpoint: unable to parse parameter")
             }
+            wdbErrorKind::BreakPointParseIntError=> {
+                write!(f, "breakpoint: line is not a number")
+            },
+            wdbErrorKind::RunIUError => {
+                write!(f, "usage: r[un] <param>")
+            },
             wdbErrorKind::RunPCOverflowError => {
                 write!(f, "run: Program counter has overflowed!")
             }

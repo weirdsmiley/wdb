@@ -12,9 +12,26 @@ fn which_cmd(cmd: &str) -> Cmd {
     let v: Vec<&str> = cmd.split_whitespace().collect();
 
     // TODO: Improve regex matching
-    match v[0] {
-        "b" | "br" => return Cmd::BreakPoint,
-        "r" => return Cmd::Run,
+    // println!("debug:{}$", v[0]);
+    match &v[0][0..1] {
+        "b" => {
+            if v[0].len() > 1 {
+                match &v[0][0..2] {
+                    "br" => Cmd::BreakPoint,
+                    _ => Cmd::Unknown,
+                };
+            }
+            return Cmd::BreakPoint;
+        },
+        "r" => {
+            if v[0].len() > 1 {
+                match &v[0][0..2] {
+                    "ru" => Cmd::Run,
+                    _ => Cmd::Unknown,
+                };
+            }
+            return Cmd::Run;
+        }
         "q" => return Cmd::Quit,
         "h" => return Cmd::Help,
         _ => return Cmd::Unknown,
@@ -33,11 +50,11 @@ pub(crate) fn parse_cmd<'a>(
     }
 
     // cmd is being passed around twice if only newline is hit
-    match which_cmd(cmd) {
+    match which_cmd(&cmd) {
         Cmd::BreakPoint => {
             // TODO: Can this be passed as reference? Is GAT coming in
             // picture?
-            ctx.BrCtx.process(cmd.clone())?;
+            ctx.BrCtx.process(cmd.to_string())?;
         }
         Cmd::Run => {
             ctx.RCtx.process(None)?;
@@ -80,9 +97,9 @@ mod tests {
         assert_eq!(which_cmd("r"), Cmd::Run);
         assert_eq!(which_cmd("q"), Cmd::Quit);
         assert_eq!(which_cmd("h"), Cmd::Help);
-        assert_eq!(which_cmd("break"), Cmd::Unknown);
-        assert_eq!(which_cmd("run"), Cmd::Unknown);
-        assert_eq!(which_cmd("quit"), Cmd::Unknown);
-        assert_eq!(which_cmd("help"), Cmd::Unknown);
+        assert_eq!(which_cmd("break"), Cmd::BreakPoint);
+        assert_eq!(which_cmd("run"), Cmd::Run);
+        assert_eq!(which_cmd("quit"), Cmd::Quit);
+        assert_eq!(which_cmd("help"), Cmd::Help);
     }
 }

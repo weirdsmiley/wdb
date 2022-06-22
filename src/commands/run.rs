@@ -17,7 +17,6 @@ impl RunTy {
     }
 
     pub(crate) fn run(&mut self) -> Result<&mut Self, Box<dyn Error>> {
-        self.pc = u32::MAX;
         if (self.pc).checked_add(1) == None {
             return Err(Box::new(wdbErrorKind::RunPCOverflowError));
         }
