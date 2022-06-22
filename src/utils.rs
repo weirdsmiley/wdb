@@ -67,16 +67,16 @@ impl fmt::Display for wdbErrorKind {
         return match self {
             wdbErrorKind::BreakPointIUError => {
                 write!(f, "usage: br[eakpoint] <file>:<line>")
-            },
+            }
             wdbErrorKind::BreakPointParseError => {
                 write!(f, "breakpoint: unable to parse parameter")
             }
-            wdbErrorKind::BreakPointParseIntError=> {
+            wdbErrorKind::BreakPointParseIntError => {
                 write!(f, "breakpoint: line is not a number")
-            },
+            }
             wdbErrorKind::RunIUError => {
                 write!(f, "usage: r[un] <param>")
-            },
+            }
             wdbErrorKind::RunPCOverflowError => {
                 write!(f, "run: Program counter has overflowed!")
             }

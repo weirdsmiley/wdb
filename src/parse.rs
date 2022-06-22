@@ -22,7 +22,7 @@ fn which_cmd(cmd: &str) -> Cmd {
                 };
             }
             return Cmd::BreakPoint;
-        },
+        }
         "r" => {
             if v[0].len() > 1 {
                 match &v[0][0..2] {
