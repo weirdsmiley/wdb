@@ -65,5 +65,6 @@ fn dump_file(obj: &object::File, endian: gimli::RunTimeEndian) -> Result<(), gim
             }
         }
     }
+
     Ok(())
 }

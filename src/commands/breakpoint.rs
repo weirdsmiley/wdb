@@ -3,8 +3,11 @@
 use crate::debugger::Context;
 use crate::utils::{wdbError, wdbErrorKind};
 use std::error::Error;
-use std::io::ErrorKind;
 
+// TODO: Provide better interface to setting breakpoints such as:
+// 1. simply the function names (starting of that function.
+// 2. setting at main
+// 3. setting at end of a function
 pub(crate) struct BreakPointTy {
     pub(crate) file: String,
     pub(crate) line: u32,
@@ -71,12 +74,17 @@ impl std::str::FromStr for BreakPointTy {
 
 impl crate::commands::CmdTy for BreakPointTy {
     type cmd = String;
-    fn process(&mut self, c: Self::cmd) -> Result<(), Box<dyn Error>> {
+
+    fn process(&mut self, cmd: Self::cmd) -> Result<(), Box<dyn Error>> {
         // Assign breakpoint (replace first byte of current instruction
         // with 0xcc.
-        let v: Vec<&str> = c.split_whitespace().collect();
+        // FIXME: Already pass a Vec<&str> of input command in all
+        // process(es). Or better associate this vector inside ctx (not in
+        // any of BrCtx, FCtx, etc. because they all will derive this from
+        // ctx).
+        let v: Vec<&str> = cmd.split_whitespace().collect();
 
-        if v.len() == 1 {
+        if v.len() != 2 {
             return Err(Box::new(wdbErrorKind::BreakPointIUError));
         }
 
