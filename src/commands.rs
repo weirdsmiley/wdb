@@ -13,10 +13,11 @@ pub mod run;
 #[derive(Debug, PartialEq, PartialOrd)]
 pub(crate) enum Cmd {
     BreakPoint,
-    Run,
-    Quit,
+    File,
     Help,
     // Print,
+    Quit,
+    Run,
     Unknown,
 }
 

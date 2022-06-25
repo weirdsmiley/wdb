@@ -10,8 +10,7 @@
 )]
 use crate::utils::wdbError;
 use object::Object;
-use std::process;
-use std::{env, fs};
+use std::{env, fs, process};
 
 mod commands;
 mod debugee;
@@ -22,20 +21,24 @@ mod utils;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     if args.len() <= 1 {
-        // TODO: 1. Dump error gracefully.
-        //       2. What about returning Box?
-        let err = wdbError("file not found".into());
-        eprintln!("{}", err);
-        return Err(Box::new(err));
+        // TODO: Provide a file command which loads the debugging binary at
+        // runtime (inside the wdb terminal).
+        // FIXME: Why do these returned Err(Box(T)) print entire T as it is?
+        // (meta)
+        return Err(Box::new(wdbError(
+            "no binary provided for debugging".into(),
+        )));
     }
+    // TODO: Read the binary properly and parse through its debugging info.
     let bin = fs::read(&args[1])?;
+    // Lets focus on ELF only for now.
     let obj = object::File::parse(&*bin)?;
 
     if obj.architecture() == object::Architecture::X86_64 {
         debugger::init_debugger(&bin, &obj)?;
     } else {
-        eprintln!("file format not supported");
-        process::exit(1);
+        return Err(Box::new(wdbError("file format not supported".into())));
+        // process::exit(1);
     }
 
     Ok(())

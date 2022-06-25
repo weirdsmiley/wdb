@@ -11,7 +11,7 @@ use std::io::prelude::*;
 fn which_cmd(cmd: &str) -> Cmd {
     let v: Vec<&str> = cmd.split_whitespace().collect();
 
-    // TODO: Improve regex matching
+    // TODO: Improve regex matching, lets go char by char and implement a parser
     // println!("debug:{}$", v[0]);
     match &v[0][0..1] {
         "b" => {
@@ -34,6 +34,7 @@ fn which_cmd(cmd: &str) -> Cmd {
         }
         "q" => return Cmd::Quit,
         "h" => return Cmd::Help,
+        "f" => return Cmd::File,
         _ => return Cmd::Unknown,
     }
 }
@@ -51,10 +52,14 @@ pub(crate) fn parse_cmd<'a>(
 
     // cmd is being passed around twice if only newline is hit
     match which_cmd(&cmd) {
+        Cmd::File => {
+            ctx.FCtx.process(cmd.clone())?;
+            dump!(ctx.FCtx);
+        }
         Cmd::BreakPoint => {
             // TODO: Can this be passed as reference? Is GAT coming in
             // picture?
-            ctx.BrCtx.process(cmd.to_string())?;
+            ctx.BrCtx.process(cmd.clone())?;
         }
         Cmd::Run => {
             ctx.RCtx.process(None)?;
@@ -63,7 +68,7 @@ pub(crate) fn parse_cmd<'a>(
             std::process::exit(0);
         }
         Cmd::Help => {
-            // use dump!()
+            // TODO: use dump!()
             println!("There is no help! Bye :')");
         }
         Cmd::Unknown => {

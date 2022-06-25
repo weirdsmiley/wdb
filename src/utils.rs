@@ -35,7 +35,7 @@ pub(crate) struct wdbError(pub(crate) String);
 
 impl fmt::Display for wdbError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "(wdb): {}", self.0)
+        write!(f, "(wdb): error: {}", self.0)
     }
 }
 
@@ -50,10 +50,10 @@ impl std::error::Error for wdbError {}
 /// Declare all possible kinds of errors for the debugger.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum wdbErrorKind {
-    /// Breakpoint being parsed runs into an error.
     BreakPointIUError, // Incorrect usage
     BreakPointParseError,
     BreakPointParseIntError,
+    FileIUError,
     RunIUError,
     RunPCOverflowError,
 }
@@ -73,6 +73,9 @@ impl fmt::Display for wdbErrorKind {
             }
             wdbErrorKind::BreakPointParseIntError => {
                 write!(f, "breakpoint: line is not a number")
+            }
+            wdbErrorKind::FileIUError => {
+                write!(f, "usage: f[ile] <binary>")
             }
             wdbErrorKind::RunIUError => {
                 write!(f, "usage: r[un] <param>")

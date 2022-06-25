@@ -10,6 +10,7 @@ use std::thread;
 // This stores all other structs defined in parse.rs
 // Should this be made into a DAG?
 pub(crate) struct Context {
+    // FIXME: I have messed up the diff between using &str and String. Fix it!
     pub(crate) ModInfo: module::ModuleInfo,
     pub(crate) FCtx: file::FileTy,
     pub(crate) BrCtx: breakpoint::BreakPointTy,
@@ -25,7 +26,7 @@ impl Context {
     ) -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Context {
             ModInfo: module::ModuleInfo::new(src, bin)?,
-            FCtx: file::FileTy::new("").unwrap(),
+            FCtx: file::FileTy::new("".to_string()).unwrap(),
             BrCtx: breakpoint::BreakPointTy::new(0).unwrap(),
             RCtx: run::RunTy::new(false, 0).unwrap(),
         })
