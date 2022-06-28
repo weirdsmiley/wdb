@@ -10,16 +10,16 @@ use std::error::Error;
 // options.
 /// Load a new binary and re-run the debugger.
 pub(crate) struct FileTy {
-    pub(crate) binary: String,
+    pub(crate) path: String,
 }
 
 impl FileTy {
     pub(crate) fn new(bin: String) -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(FileTy { binary: bin })
+        Ok(FileTy { path: bin })
     }
 
     pub(crate) fn dump(&self) -> String {
-        self.binary.to_string()
+        self.path.to_string()
     }
 }
 
@@ -35,20 +35,9 @@ impl crate::commands::CmdTy for FileTy {
             return Err(Box::new(wdbErrorKind::FileIUError));
         }
 
-        self.binary = v[1].to_string();
+        self.path = v[1].to_string();
 
-        // FIXME: This is from main.rs
-        // This entire block should be inside init_debugger and also removed
-        // from main().
-        let bin = fs::read(self.binary.clone())?;
-        // Lets focus on ELF only for now.
-        let obj = object::File::parse(&*bin)?;
-
-        if obj.architecture() == object::Architecture::X86_64 {
-            init_debugger(&bin, &obj)?;
-        } else {
-            return Err(Box::new(wdbError("file format not supported".into())));
-        }
+        init_debugger(&self.path)?;
 
         Ok(())
     }

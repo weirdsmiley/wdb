@@ -29,17 +29,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "no binary provided for debugging".into(),
         )));
     }
-    // TODO: Read the binary properly and parse through its debugging info.
-    let bin = fs::read(&args[1])?;
-    // Lets focus on ELF only for now.
-    let obj = object::File::parse(&*bin)?;
 
-    if obj.architecture() == object::Architecture::X86_64 {
-        debugger::init_debugger(&bin, &obj)?;
-    } else {
-        return Err(Box::new(wdbError("file format not supported".into())));
-        // process::exit(1);
-    }
+    // FIXME: It should still open the console and let dev use f command to load
+    // binary dynamically.
+    debugger::init_debugger(&args[1])?;
 
     Ok(())
 }

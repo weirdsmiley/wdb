@@ -2,8 +2,10 @@
 use crate::commands::*;
 use crate::debugee;
 use crate::parse;
-use crate::utils::edump;
+use crate::utils::{edump, wdbError};
 // TODO: Parallelize continue_debugee
+use object::Object;
+use std::fs;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
@@ -47,10 +49,7 @@ impl Context {
 //      waitpid() // but we are still waiting for the debugee to stop
 //                // essentially a sequential program
 //      SIGTRAP returned, breakpoint hit, dump source line
-pub(crate) fn init_debugger(
-    bin: &Vec<u8>,
-    obj: &object::File,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub(crate) fn init_debugger(path: &String) -> Result<(), Box<dyn std::error::Error>> {
     // use .text section to get the instructions
     // if let Some(section) = obj.section_by_name(".text") {
     //     instprint!("{:#x?}", section.data()?);
@@ -59,8 +58,15 @@ pub(crate) fn init_debugger(
     // }
     // println!("{:#x?}", bin);
 
-    let mut Ctx: Context = Context::new("main.rs", "bin")?;
+    let bin = fs::read(&path)?;
+    // Lets focus on ELF only for now.
+    let obj = object::File::parse(&*bin)?;
 
+    if obj.architecture() != object::Architecture::X86_64 {
+        return Err(Box::new(wdbError("file format not supported".into())));
+    }
+
+    let mut Ctx: Context = Context::new("main.rs", "bin")?;
     let mut cmd = String::new();
 
     loop {
