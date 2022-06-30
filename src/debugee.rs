@@ -7,6 +7,12 @@ use std::{borrow, env, fs};
 pub(crate) fn continue_debugee(bin: &Vec<u8>) -> Result<(), Box<dyn Error>> {
     // FIXME: Run obj binary, but this is not a binary, it is an object
     // file
+    // TODO: In order to run the debugee program, we can use
+    // fexecve which is in nix crate.
+    // Simply continue_debugee
+    // and waitpid();
+    // This should be when 'run' command is hit.
+    // debugee::continue_debugee(bin)?;
     let path = "test/bin";
     let file = fs::File::open(&path).unwrap();
     let mmap = unsafe { memmap::Mmap::map(&file).unwrap() };

@@ -65,7 +65,6 @@ impl BreakPointTy {
 impl std::str::FromStr for BreakPointTy {
     type Err = std::string::ParseError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // get file name and line number
         let (file, line) = BreakPointTy::parse(s).unwrap();
 
         Ok(BreakPointTy { file, line })
@@ -109,6 +108,20 @@ impl crate::commands::CmdTy for BreakPointTy {
             }
         };
         Ok(())
+    }
+
+    fn dump_help(&self) {
+        println!(
+            "{}
+        Breakpoint command will insert breakpoints(duh!) to specific addresses.
+        The format for specifying an address is `file:line number`.
+
+        The implementation is crudely based on replacing first byte of
+        instruction with 0xcc which triggers the interrupt and the interrupt
+        handler returns a SIGTRAP. Trapping this signal, we can stop the
+        debugger and process more commands as we wish.",
+            wdbErrorKind::BreakPointIUError
+        );
     }
 }
 

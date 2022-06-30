@@ -9,6 +9,8 @@ use std::io::prelude::*;
 // Returns the appropriate command (struct object?) which then can be
 // used for do processing.
 fn which_cmd(cmd: &str) -> Cmd {
+    // FIXME: Don't split multiple times through execution. The best way is to
+    // put an AST inside Context.
     let v: Vec<&str> = cmd.split_whitespace().collect();
 
     // TODO: Improve regex matching, lets go char by char and implement a parser
@@ -68,8 +70,12 @@ pub(crate) fn parse_cmd<'a>(
             std::process::exit(0);
         }
         Cmd::Help => {
-            // TODO: use dump!()
-            println!("There is no help! Bye :')");
+            // FIXME: Why do we need help module if every command can dump_help
+            // itself?
+            // help::dump_help(&cmd);
+            ctx.BrCtx.dump_help();
+            ctx.RCtx.dump_help();
+            ctx.FCtx.dump_help();
         }
         Cmd::Unknown => {
             eprintln!("unknown command");

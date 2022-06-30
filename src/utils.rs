@@ -41,9 +41,6 @@ impl fmt::Display for wdbError {
 
 impl std::error::Error for wdbError {}
 
-// FIXME: Is this making wdbError redundant? Notice, wdbErrorKind is for
-// specific and identified error types, but wdbError is for absolute error
-// custome types.
 // TODO: Distinguishing between errors and warnings. Errors will terminate
 // the debugger's loop, but warnings should help the developer, and allow
 // the debugger to proceed.
@@ -60,11 +57,16 @@ pub(crate) enum wdbErrorKind {
 
 impl fmt::Display for wdbErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // TODO: This will handle all the kinds of errors and their
+        // This will handle all the kinds of errors and their
         // displays. Remember, these are only for writing and not exiting.
         // The decision of whether to exit (debugger) or not is dependant
         // on the invoker.
         return match self {
+            // TODO:
+            // Usage errors should be printed on console because no one wants
+            // help pages in their logs. So eventually, *IUError(s) will go away
+            // and there will be a dump_help for each command type. And those
+            // dump_help will only be printing on console.
             wdbErrorKind::BreakPointIUError => {
                 write!(f, "usage: br[eakpoint] <file>:<line>")
             }

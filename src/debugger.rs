@@ -13,6 +13,7 @@ use std::thread;
 // Should this be made into a DAG?
 pub(crate) struct Context {
     // FIXME: I have messed up the diff between using &str and String. Fix it!
+    // TODO: This should contain the current command as an AST of parsed tokens.
     pub(crate) ModInfo: module::ModuleInfo,
     pub(crate) FCtx: file::FileTy,
     pub(crate) BrCtx: breakpoint::BreakPointTy,
@@ -75,29 +76,5 @@ pub(crate) fn init_debugger(path: &String) -> Result<(), Box<dyn std::error::Err
         if let Err(err) = parse::parse_cmd(&mut Ctx, &cmd) {
             edump!(err);
         };
-
-        // This has to be the modified binary (that is binary after
-        // inserting 0xcc at appropriate place).
-        // TODO: Move this in new thread. and to wait for this particular
-        // thread, we can join. But that's is so inefficient, as it
-        // becomes a sequential program only. Maybe we have to take a look
-        // at this procedure in a different way to make it parallel.
-
-        // FIXME: Fix obj dependency over bin while borrow happens.
-
-        // let debugee_thread = thread::spawn(move || {
-        //     debugee::continue_debugee(&obj);
-        // });
-
-        // debugee_thread
-        //     .join()
-        //     .expect("unable to join debugee thread");
-
-        // TODO: In order to run the debugee program, we can use
-        // fexecve which is in nix crate.
-        // Simply continue_debugee
-        // and waitpid();
-        // This should be when 'run' command is hit.
-        // debugee::continue_debugee(bin)?;
     }
 }

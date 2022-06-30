@@ -41,6 +41,15 @@ impl crate::commands::CmdTy for FileTy {
 
         Ok(())
     }
+
+    fn dump_help(&self) {
+        println!(
+            "{}
+        File command will load any binary (currently expecting a 64-bit ELF
+        build with DWARF 4/5 debugging symbols) dynamically.",
+            wdbErrorKind::FileIUError
+        );
+    }
 }
 
 #[cfg(test)]

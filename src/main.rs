@@ -21,10 +21,7 @@ mod utils;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     if args.len() <= 1 {
-        // TODO: Provide a file command which loads the debugging binary at
-        // runtime (inside the wdb terminal).
-        // FIXME: Why do these returned Err(Box(T)) print entire T as it is?
-        // (meta)
+        // FIXME: Why do returned Err(Box(T)) print entire T as it is? (meta)
         return Err(Box::new(wdbError(
             "no binary provided for debugging".into(),
         )));

@@ -31,5 +31,11 @@ pub(crate) enum Cmd {
 pub(crate) trait CmdTy {
     // declare a type which stores the current cmd (raw)
     type cmd;
+
+    // The processing logic for every command will lie here.
     fn process<'a>(&mut self, c: Self::cmd) -> Result<(), Box<dyn Error>>;
+
+    // Each command can implement this function for specifically dumping their
+    // help. This is different from dumping their members' information.
+    fn dump_help(&self);
 }

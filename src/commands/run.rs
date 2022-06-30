@@ -42,6 +42,15 @@ impl crate::commands::CmdTy for RunTy {
             Err(e) => Err(e),
         }
     }
+
+    fn dump_help(&self) {
+        println!(
+            "{}
+        Run command will continue the debugee program. It also increments the
+        program counter (for reasons, I have no idea about)",
+            wdbErrorKind::RunIUError
+        );
+    }
 }
 
 #[cfg(test)]
