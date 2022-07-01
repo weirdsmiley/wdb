@@ -28,7 +28,6 @@ impl RunTy {
 
 impl crate::commands::CmdTy for RunTy {
     type cmd = Option<String>;
-
     fn process(&mut self, cmd: Self::cmd) -> Result<(), Box<dyn Error>> {
         // start running the debugee until next interrupt is occurred
         println!("Running...");

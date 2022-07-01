@@ -73,7 +73,6 @@ impl std::str::FromStr for BreakPointTy {
 
 impl crate::commands::CmdTy for BreakPointTy {
     type cmd = String;
-
     fn process(&mut self, cmd: Self::cmd) -> Result<(), Box<dyn Error>> {
         // Assign breakpoint (replace first byte of current instruction
         // with 0xcc.

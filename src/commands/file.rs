@@ -27,7 +27,6 @@ impl FileTy {
 // run main
 impl crate::commands::CmdTy for FileTy {
     type cmd = String;
-
     fn process(&mut self, cmd: Self::cmd) -> Result<(), Box<dyn Error>> {
         let v: Vec<&str> = cmd.split_whitespace().collect();
 
@@ -37,7 +36,11 @@ impl crate::commands::CmdTy for FileTy {
 
         self.path = v[1].to_string();
 
-        init_debugger(&self.path)?;
+        // This is creating new Context and we are losing previous information.
+        // This is becoming like a fork of new child process. This is not ideal,
+        // and rather it should be cleaning up the current Context and returning
+        // back (safe-guarding the path obviously).
+        // init_debugger(&self.path)?;
 
         Ok(())
     }
