@@ -34,6 +34,8 @@ impl crate::commands::CmdTy for FileTy {
             return Err(Box::new(wdbErrorKind::FileIUError));
         }
 
+        // TODO: access parent struct (kernel has a macro for this)
+
         self.path = v[1].to_string();
 
         // This is creating new Context and we are losing previous information.

@@ -15,6 +15,12 @@ impl ModuleInfo {
     }
 
     pub(crate) fn dump(&self) -> String {
-        String::from("modinfo")
+        format!(
+            "{{
+        source: {}
+        binary: {}
+    }}",
+            self.source, self.binary
+        )
     }
 }

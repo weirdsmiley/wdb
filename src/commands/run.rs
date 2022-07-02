@@ -24,6 +24,10 @@ impl RunTy {
         self.pc += 1;
         Ok(self)
     }
+
+    pub(crate) fn dump(&self) -> String {
+        self.pc.to_string()
+    }
 }
 
 impl crate::commands::CmdTy for RunTy {

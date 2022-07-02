@@ -57,6 +57,8 @@ pub(crate) fn parse_cmd<'a>(
         Cmd::File => {
             ctx.FCtx.process(cmd.clone())?;
             dump!(ctx.FCtx);
+            // As new binary is loaded, we should return
+            return Ok(ctx);
         }
         Cmd::BreakPoint => {
             // TODO: Can this be passed as reference? Is GAT coming in

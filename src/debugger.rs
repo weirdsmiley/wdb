@@ -2,7 +2,7 @@
 use crate::commands::*;
 use crate::debugee;
 use crate::parse;
-use crate::utils::{edump, wdbError};
+use crate::utils::{dump, edump, wdbError};
 // TODO: Parallelize continue_debugee
 use object::Object;
 use std::fs;
@@ -29,10 +29,25 @@ impl Context {
     ) -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Context {
             ModInfo: module::ModuleInfo::new(src, bin)?,
-            FCtx: file::FileTy::new("".to_string()).unwrap(),
+            FCtx: file::FileTy::new(bin.to_string()).unwrap(),
             BrCtx: breakpoint::BreakPointTy::new(0).unwrap(),
             RCtx: run::RunTy::new(false, 0).unwrap(),
         })
+    }
+
+    pub(crate) fn dump(&self) -> String {
+        format!(
+            "{{
+    Module : {}
+    File: {}
+    Breakpoints: {}
+    Program counter: {}
+}} ",
+            self.ModInfo.dump(),
+            self.FCtx.dump(),
+            self.BrCtx.dump(),
+            self.RCtx.dump()
+        )
     }
 }
 
@@ -76,5 +91,8 @@ pub(crate) fn init_debugger(path: &String) -> Result<(), Box<dyn std::error::Err
         if let Err(err) = parse::parse_cmd(&mut Ctx, &cmd) {
             edump!(err);
         };
+
+        #[cfg(debug_assertions)]
+        dump!(Ctx);
     }
 }
