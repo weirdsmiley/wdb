@@ -2,8 +2,7 @@ use object::Object;
 use std::{env, fs, process};
 
 use crate::debugger::{init_debugger, Context};
-use crate::utils::{wdbError, wdbErrorKind};
-use std::error::Error;
+use crate::error::{wdbError, wdbErrorKind};
 
 // All structs of type *Ty are actual debugger commands(removing Ty at
 // end). All of their members are placeholders for their possible
@@ -14,7 +13,7 @@ pub(crate) struct FileTy {
 }
 
 impl FileTy {
-    pub(crate) fn new(bin: String) -> Result<Self, Box<dyn std::error::Error>> {
+    pub(crate) fn new(bin: String) -> Result<Self, wdbError> {
         Ok(FileTy { path: bin })
     }
 
@@ -27,11 +26,11 @@ impl FileTy {
 // run main
 impl crate::commands::CmdTy for FileTy {
     type cmd = String;
-    fn process(&mut self, cmd: Self::cmd) -> Result<(), Box<dyn Error>> {
+    fn process(&mut self, cmd: Self::cmd) -> Result<(), wdbError> {
         let v: Vec<&str> = cmd.split_whitespace().collect();
 
         if v.len() != 2 {
-            return Err(Box::new(wdbErrorKind::FileIUError));
+            return Err(wdbError::from(wdbErrorKind::FileIUError));
         }
 
         // TODO: access parent struct (kernel has a macro for this)
@@ -62,5 +61,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_FileTy() {}
+    fn test_new() {
+        let file_type = FileTy::new("a.out".to_string()).unwrap();
+        assert!(file_type.path == "a.out");
+    }
 }

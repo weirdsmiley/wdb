@@ -1,7 +1,6 @@
 use crate::debugee;
 use crate::debugger::Context;
-use crate::utils::{wdbError, wdbErrorKind};
-use std::error::Error;
+use crate::error::{wdbError, wdbErrorKind};
 
 pub(crate) struct RunTy {
     is_running: bool,
@@ -9,17 +8,18 @@ pub(crate) struct RunTy {
 }
 
 impl RunTy {
-    pub(crate) fn new(run: bool, pc: u32) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn new(run: bool, pc: u32) -> Result<Self, wdbError> {
         Ok(RunTy {
             is_running: run,
             pc,
         })
     }
 
-    pub(crate) fn run(&mut self) -> Result<&mut Self, Box<dyn Error>> {
-        if (self.pc).checked_add(1) == None {
-            return Err(Box::new(wdbErrorKind::RunPCOverflowError));
+    pub(crate) fn run(&mut self) -> Result<&mut Self, wdbError> {
+        if (self.pc).checked_add(1).is_none() {
+            return Err(wdbError::from(wdbErrorKind::RunPCOverflowError));
         }
+
         self.is_running = true;
         self.pc += 1;
         Ok(self)
@@ -32,7 +32,7 @@ impl RunTy {
 
 impl crate::commands::CmdTy for RunTy {
     type cmd = Option<String>;
-    fn process(&mut self, cmd: Self::cmd) -> Result<(), Box<dyn Error>> {
+    fn process(&mut self, cmd: Self::cmd) -> Result<(), wdbError> {
         // start running the debugee until next interrupt is occurred
         println!("Running...");
         // FIXME: Fix the binary context.
@@ -61,7 +61,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_RunTy() {
+    fn test_run() {
         let mut not_running = RunTy {
             is_running: false,
             pc: 0,
@@ -76,7 +76,7 @@ mod tests {
                 assert!(not_running.pc == first_run.pc);
             }
             Err(_) => {
-                eprintln!("test_RunTy failed");
+                eprintln!("test_run failed");
             }
         }
     }

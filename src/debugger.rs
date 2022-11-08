@@ -1,8 +1,10 @@
 //! This module focuses solely on the debugger.
 use crate::commands::*;
 use crate::debugee;
+use crate::error::wdbError;
+use crate::error::wdbErrorKind;
 use crate::parse;
-use crate::utils::{dump, edump, wdbError};
+use crate::utils::{dump, edump};
 // TODO: Parallelize continue_debugee
 use object::Object;
 use std::fs;
@@ -23,10 +25,7 @@ pub(crate) struct Context {
 impl Context {
     // Should this return Error ype otherwise too?
     // Why should it contain dyn?
-    pub(crate) fn new(
-        src: &'static str,
-        bin: &'static str,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    pub(crate) fn new(src: &'static str, bin: &'static str) -> Result<Self, wdbError> {
         Ok(Context {
             ModInfo: module::ModuleInfo::new(src, bin)?,
             FCtx: file::FileTy::new(bin.to_string()).unwrap(),
@@ -38,10 +37,10 @@ impl Context {
     pub(crate) fn dump(&self) -> String {
         format!(
             "{{
-    Module : {}
-    File: {}
-    Breakpoints: {}
-    Program counter: {}
+  Module : {}
+  File: {}
+  Breakpoints: {}
+  Program counter: {}
 }} ",
             self.ModInfo.dump(),
             self.FCtx.dump(),
@@ -65,7 +64,25 @@ impl Context {
 //      waitpid() // but we are still waiting for the debugee to stop
 //                // essentially a sequential program
 //      SIGTRAP returned, breakpoint hit, dump source line
-pub(crate) fn init_debugger(path: &String) -> Result<(), Box<dyn std::error::Error>> {
+pub(crate) fn init_debugger(args: &Vec<String>) -> Result<(), wdbError> {
+    let mut Ctx: Context;
+
+    if args.len() > 1 {
+        // TODO: handle cmdline arguments in different way
+        let path = &args[1];
+        // let bin  = fs::read(&path)?;
+        // if let Some(bin) = fs::read(&path).unwrap() { }
+        // let obj  = object::File::parse(&*bin)?;
+
+        if let Ok(bin) = fs::read(path) {
+            if let Ok(obj) = object::File::parse(&*bin) {
+                if obj.architecture() != object::Architecture::X86_64 {
+                    return Err(wdbError::from(wdbErrorKind::ArchitectureError));
+                }
+            }
+        }
+    }
+
     // use .text section to get the instructions
     // if let Some(section) = obj.section_by_name(".text") {
     //     instprint!("{:#x?}", section.data()?);
@@ -74,15 +91,7 @@ pub(crate) fn init_debugger(path: &String) -> Result<(), Box<dyn std::error::Err
     // }
     // println!("{:#x?}", bin);
 
-    let bin = fs::read(&path)?;
-    // Lets focus on ELF only for now.
-    let obj = object::File::parse(&*bin)?;
-
-    if obj.architecture() != object::Architecture::X86_64 {
-        return Err(Box::new(wdbError("file format not supported".into())));
-    }
-
-    let mut Ctx: Context = Context::new("main.rs", "bin")?;
+    Ctx = Context::new("main.c", "bin")?;
     let mut cmd = String::new();
 
     loop {
@@ -91,6 +100,17 @@ pub(crate) fn init_debugger(path: &String) -> Result<(), Box<dyn std::error::Err
         if let Err(err) = parse::parse_cmd(&mut Ctx, &cmd) {
             edump!(err);
         };
+
+        if let Ok(binary) = fs::read(&Ctx.FCtx.path) {
+            let objfh = object::File::parse(&*binary).unwrap();
+
+            if objfh.architecture() != object::Architecture::X86_64 {
+                let err = wdbError {
+                    kind: wdbErrorKind::ArchitectureError,
+                };
+                edump!(err);
+            }
+        }
 
         #[cfg(debug_assertions)]
         dump!(Ctx);

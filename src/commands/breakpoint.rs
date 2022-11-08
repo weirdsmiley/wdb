@@ -1,8 +1,7 @@
 //! This submodule performs all handling for breakpoint command in the
 //! available in the debugger.
 use crate::debugger::Context;
-use crate::utils::{wdbError, wdbErrorKind};
-use std::error::Error;
+use crate::error::{wdbError, wdbErrorKind};
 
 // TODO: Provide better interface to setting breakpoints such as:
 // 1. simply the function names (starting of that function.
@@ -17,7 +16,7 @@ pub(crate) struct BreakPointTy {
 impl BreakPointTy {
     // TODO: Let us take the input str itself and use from_str to parse
     // it.
-    pub(crate) fn new(l: u32) -> Result<Self, Box<dyn Error>> {
+    pub(crate) fn new(l: u32) -> Result<Self, wdbError> {
         Ok(BreakPointTy {
             file: "".to_string(),
             line: l,
@@ -26,34 +25,30 @@ impl BreakPointTy {
 
     // Get the line number from the path. The path is of format
     // 'file:line'. It should not exit with error if colon is not found.
-    pub(crate) fn parse(path: &str) -> Result<(String, u32), Box<dyn Error>> {
+    pub(crate) fn parse(path: &str) -> Result<(String, u32), wdbError> {
         match path.trim().split_once(':') {
             Some(iter) => {
                 let (file, line) = iter;
                 if let Err(parsed_line) = line.parse::<u32>() {
-                    return Err(Box::new(wdbErrorKind::BreakPointParseIntError));
+                    return Err(wdbError::from(wdbErrorKind::BreakPointParseIntError));
                 }
 
-                return Ok((file.to_string(), line.parse::<u32>().unwrap()));
+                Ok((file.to_string(), line.parse::<u32>().unwrap()))
             }
-            None => {
-                return Err(Box::new(wdbErrorKind::BreakPointParseError));
-            }
+            None => Err(wdbError::from(wdbErrorKind::BreakPointParseError)),
         }
     }
 
     // Parse br and insert breakpoint to insert it to self.
-    pub(crate) fn insert(&mut self, br: &str) -> Result<&mut Self, Box<dyn Error>> {
+    pub(crate) fn insert(&mut self, br: &str) -> Result<&mut Self, wdbError> {
         match BreakPointTy::parse(br) {
             Ok(parsed) => {
                 let (file, line) = parsed;
                 self.file = file;
                 self.line = line;
-                return Ok(self);
+                Ok(self)
             }
-            Err(err) => {
-                return Err(err);
-            }
+            Err(err) => Err(err),
         }
     }
 
@@ -73,7 +68,7 @@ impl std::str::FromStr for BreakPointTy {
 
 impl crate::commands::CmdTy for BreakPointTy {
     type cmd = String;
-    fn process(&mut self, cmd: Self::cmd) -> Result<(), Box<dyn Error>> {
+    fn process(&mut self, cmd: Self::cmd) -> Result<(), wdbError> {
         // Assign breakpoint (replace first byte of current instruction
         // with 0xcc.
         // FIXME: Already pass a Vec<&str> of input command in all
@@ -83,7 +78,7 @@ impl crate::commands::CmdTy for BreakPointTy {
         let v: Vec<&str> = cmd.split_whitespace().collect();
 
         if v.len() != 2 {
-            return Err(Box::new(wdbErrorKind::BreakPointIUError));
+            return Err(wdbError::from(wdbErrorKind::BreakPointIUError));
         }
 
         let breakpoint = v[1];
@@ -129,7 +124,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_BreakPointTy() {
+    fn test_parse() {
         // test parse()
         let brk_t = BreakPointTy {
             file: "file".into(),
@@ -142,13 +137,13 @@ mod tests {
         match BreakPointTy::parse("file:123") {
             Ok(x) => {}
             Err(e) => {
-                eprintln!("test_BreakPointTy failed");
+                eprintln!("test_parse failed");
             }
         }
         match BreakPointTy::parse("file:abc") {
             Ok(x) => {}
             Err(e) => {
-                eprintln!("test_BreakPointTy failed");
+                eprintln!("test_parse failed");
             }
         }
     }

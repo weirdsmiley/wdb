@@ -16,4 +16,3 @@ publish = false
 object = "0.28.3"
 nix = "0.24.1"
 gimli = "0.26.1"
-memmap = "0.7.0"

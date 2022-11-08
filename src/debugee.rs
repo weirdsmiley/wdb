@@ -1,10 +1,15 @@
 //! This module is for the exection of the debuggee program.
+use crate::error::wdbError;
 use object::{Object, ObjectSection};
 use std::error::Error;
 use std::{borrow, env, fs};
 
 // Get the modified binary file and run it.
-pub(crate) fn continue_debugee(bin: &Vec<u8>) -> Result<(), Box<dyn Error>> {
+// TODO: Inspiration from Valgrind's  development
+// https://nnethercote.github.io/2022/07/27/twenty-years-of-valgrind.html
+// Doing binary interpretation is slow. Then how does gdb/lldb work faster?
+// Can cache be used in more efficient manner?
+pub(crate) fn continue_debugee(bin: &[u8]) -> Result<(), wdbError> {
     // FIXME: Run obj binary, but this is not a binary, it is an object
     // file
     // TODO: In order to run the debugee program, we can use
@@ -14,17 +19,20 @@ pub(crate) fn continue_debugee(bin: &Vec<u8>) -> Result<(), Box<dyn Error>> {
     // This should be when 'run' command is hit.
     // debugee::continue_debugee(bin)?;
     let path = "test/bin";
-    let file = fs::File::open(&path).unwrap();
-    let mmap = unsafe { memmap::Mmap::map(&file).unwrap() };
-    let object = object::File::parse(&*mmap).unwrap();
-    let endian = if object.is_little_endian() {
-        gimli::RunTimeEndian::Little
-    } else {
-        gimli::RunTimeEndian::Big
-    };
-    dump_file(&object, endian)?;
+    let file = fs::File::open(path).unwrap();
 
     Ok(())
+
+    // let mmap = unsafe { memmap::Mmap::map(&file).unwrap() };
+    // let object = object::File::parse(&*mmap).unwrap();
+    // let endian = if object.is_little_endian() {
+    //     gimli::RunTimeEndian::Little
+    // } else {
+    //     gimli::RunTimeEndian::Big
+    // };
+    // dump_file(&object, endian)?;
+
+    // Ok(())
 }
 
 // TODO: Remove this boilerplate!
@@ -43,7 +51,7 @@ fn dump_file(obj: &object::File, endian: gimli::RunTimeEndian) -> Result<(), gim
     let borrow_section: &dyn for<'a> Fn(
         &'a borrow::Cow<[u8]>,
     ) -> gimli::EndianSlice<'a, gimli::RunTimeEndian> =
-        &|section| gimli::EndianSlice::new(&*section, endian);
+        &|section| gimli::EndianSlice::new(section, endian);
 
     // Create `EndianSlice`s for all of the sections.
     let dwarf = dwarf_cow.borrow(&borrow_section);
@@ -51,22 +59,24 @@ fn dump_file(obj: &object::File, endian: gimli::RunTimeEndian) -> Result<(), gim
     // Iterate over the compilation units.
     let mut iter = dwarf.units();
     while let Some(header) = iter.next()? {
-        println!(
-            "Unit at <.debug_info+0x{:x}>",
-            header.offset().as_debug_info_offset().unwrap().0
-        );
+        // println!(
+        //     "Unit at <.debug_info+0x{:x}>",
+        //     header.offset().as_debug_info_offset().unwrap().0
+        // );
         let unit = dwarf.unit(header)?;
 
         // Iterate over the Debugging Information Entries (DIEs) in the unit.
-        let mut depth = 0;
         let mut entries = unit.entries();
-        while let Some((delta_depth, entry)) = entries.next_dfs()? {
-            depth += delta_depth;
-            println!("<{}><{:x}> {}", depth, entry.offset().0, entry.tag());
+        if let Some((delta_depth, entry)) = entries.next_dfs()? {
+            println!("{:#010x}: {}", entry.offset().0, entry.tag());
 
             // Iterate over the attributes in the DIE.
             let mut attrs = entry.attrs();
             while let Some(attr) = attrs.next()? {
+                // Print further
+                // match attr.value() {
+
+                // }
                 println!("   {}: {:?}", attr.name(), attr.value());
             }
         }

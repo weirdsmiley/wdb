@@ -2,6 +2,7 @@
 //! it accordingly.
 use crate::commands::*;
 use crate::debugger::Context;
+use crate::error::{wdbError, wdbErrorKind};
 use crate::utils::*;
 use std::error::Error;
 use std::io::prelude::*;
@@ -23,7 +24,7 @@ fn which_cmd(cmd: &str) -> Cmd {
                     _ => Cmd::Unknown,
                 };
             }
-            return Cmd::BreakPoint;
+            Cmd::BreakPoint
         }
         "r" => {
             if v[0].len() > 1 {
@@ -32,12 +33,12 @@ fn which_cmd(cmd: &str) -> Cmd {
                     _ => Cmd::Unknown,
                 };
             }
-            return Cmd::Run;
+            Cmd::Run
         }
-        "q" => return Cmd::Quit,
-        "h" => return Cmd::Help,
-        "f" => return Cmd::File,
-        _ => return Cmd::Unknown,
+        "q" => Cmd::Quit,
+        "h" => Cmd::Help,
+        "f" => Cmd::File,
+        _ => Cmd::Unknown,
     }
 }
 
@@ -53,7 +54,9 @@ pub(crate) fn parse_cmd<'a>(
     }
 
     // cmd is being passed around twice if only newline is hit
-    match which_cmd(&cmd) {
+    match which_cmd(cmd) {
+        // TODO: Move passing around cmd as argument, every match case will
+        // identify important args here and only pass those important args.
         Cmd::File => {
             ctx.FCtx.process(cmd.clone())?;
             dump!(ctx.FCtx);
@@ -86,15 +89,19 @@ pub(crate) fn parse_cmd<'a>(
     Ok(ctx)
 }
 
-pub(crate) fn get_next_cmd(input: &mut String) -> Result<&mut String, Box<dyn Error>> {
+pub(crate) fn get_next_cmd(input: &mut String) -> Result<&mut String, wdbError> {
     let prev_input = input.clone();
     *input = String::new();
 
     print!("(wdb) ");
-    std::io::stdout().flush()?;
+    if std::io::stdout().flush().is_err() {
+        return Err(wdbError::from(wdbErrorKind::BreakPointParseError));
+    }
 
     let stdin = std::io::stdin();
-    stdin.read_line(input)?;
+    if stdin.read_line(input).is_err() {
+        return Err(wdbError::from(wdbErrorKind::ParseError));
+    }
 
     Ok(input)
 }

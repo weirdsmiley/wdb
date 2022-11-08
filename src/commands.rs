@@ -2,6 +2,7 @@
 //! also contains all the methods associated to perform operations
 //! according to the command after parsing it.
 use crate::debugger::Context;
+use crate::error::wdbError;
 use std::error::Error;
 
 pub mod breakpoint;
@@ -33,7 +34,7 @@ pub(crate) trait CmdTy {
     type cmd;
 
     // The processing logic for every command will lie here.
-    fn process<'a>(&mut self, c: Self::cmd) -> Result<(), Box<dyn Error>>;
+    fn process(&mut self, c: Self::cmd) -> Result<(), wdbError>;
 
     // Each command can implement this function for specifically dumping their
     // help. This is different from dumping their members' information.
