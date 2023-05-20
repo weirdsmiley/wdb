@@ -1,5 +1,5 @@
 //! This module focuses solely on the debugger.
-use crate::commands::*;
+use crate::context::Context;
 use crate::debugee;
 use crate::error::wdbError;
 use crate::error::wdbErrorKind;
@@ -10,45 +10,6 @@ use object::Object;
 use std::fs;
 use std::sync::{Arc, Mutex};
 use std::thread;
-
-// This stores all other structs defined in parse.rs
-// Should this be made into a DAG?
-pub(crate) struct Context {
-    // FIXME: I have messed up the diff between using &str and String. Fix it!
-    // TODO: This should contain the current command as an AST of parsed tokens.
-    pub(crate) ModInfo: module::ModuleInfo,
-    pub(crate) FCtx: file::FileTy,
-    pub(crate) BrCtx: breakpoint::BreakPointTy,
-    pub(crate) RCtx: run::RunTy,
-}
-
-impl Context {
-    // Should this return Error ype otherwise too?
-    // Why should it contain dyn?
-    pub(crate) fn new(src: &'static str, bin: &'static str) -> Result<Self, wdbError> {
-        Ok(Context {
-            ModInfo: module::ModuleInfo::new(src, bin)?,
-            FCtx: file::FileTy::new(bin.to_string()).unwrap(),
-            BrCtx: breakpoint::BreakPointTy::new(0).unwrap(),
-            RCtx: run::RunTy::new(false, 0).unwrap(),
-        })
-    }
-
-    pub(crate) fn dump(&self) -> String {
-        format!(
-            "{{
-  Module : {}
-  File: {}
-  Breakpoints: {}
-  Program counter: {}
-}} ",
-            self.ModInfo.dump(),
-            self.FCtx.dump(),
-            self.BrCtx.dump(),
-            self.RCtx.dump()
-        )
-    }
-}
 
 // Start the debugger
 // 1. First inside a loop {} ask for user input
@@ -64,23 +25,9 @@ impl Context {
 //      waitpid() // but we are still waiting for the debugee to stop
 //                // essentially a sequential program
 //      SIGTRAP returned, breakpoint hit, dump source line
-pub(crate) fn init_debugger(args: &Vec<String>) -> Result<(), wdbError> {
-    let mut Ctx: Context;
-
-    if args.len() > 1 {
-        // TODO: handle cmdline arguments in different way
-        let path = &args[1];
-        // let bin  = fs::read(&path)?;
-        // if let Some(bin) = fs::read(&path).unwrap() { }
-        // let obj  = object::File::parse(&*bin)?;
-
-        if let Ok(bin) = fs::read(path) {
-            if let Ok(obj) = object::File::parse(&*bin) {
-                if obj.architecture() != object::Architecture::X86_64 {
-                    return Err(wdbError::from(wdbErrorKind::ArchitectureError));
-                }
-            }
-        }
+pub(crate) fn init_debugger(args: Vec<String>) -> Result<(), wdbError> {
+    if args.len() < 1 {
+        return Err(wdbError::from(wdbErrorKind::NonExistentBinary));
     }
 
     // use .text section to get the instructions
@@ -91,28 +38,22 @@ pub(crate) fn init_debugger(args: &Vec<String>) -> Result<(), wdbError> {
     // }
     // println!("{:#x?}", bin);
 
-    Ctx = Context::new("main.c", "bin")?;
-    let mut cmd = String::new();
+    let mut Ctx = Context::new(args[1].to_owned()).unwrap();
 
     loop {
-        parse::get_next_cmd(&mut cmd)?;
+        let cmd = parse::get_next_cmd()?;
 
-        if let Err(err) = parse::parse_cmd(&mut Ctx, &cmd) {
-            edump!(err);
+        match parse::parse_cmd(&mut Ctx, &cmd) {
+            Ok(ctx) => Ctx = ctx,
+            Err(err) => edump!(err),
         };
 
-        if let Ok(binary) = fs::read(&Ctx.FCtx.path) {
-            let objfh = object::File::parse(&*binary).unwrap();
-
-            if objfh.architecture() != object::Architecture::X86_64 {
-                let err = wdbError {
-                    kind: wdbErrorKind::ArchitectureError,
-                };
-                edump!(err);
-            }
-        }
+        // // Why we need this?
+        // if let Ok(binary) = fs::read(&Ctx.FCtx.path) {
+        //     let objfh = object::File::parse(&*binary).unwrap();
+        // }
 
         #[cfg(debug_assertions)]
-        dump!(Ctx);
+        dump!(&mut Ctx);
     }
 }

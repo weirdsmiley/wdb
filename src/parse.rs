@@ -1,7 +1,7 @@
 //! This module gets the next input command inside the debugger and parses
 //! it accordingly.
 use crate::commands::*;
-use crate::debugger::Context;
+use crate::context::Context;
 use crate::error::{wdbError, wdbErrorKind};
 use crate::utils::*;
 use std::error::Error;
@@ -38,6 +38,7 @@ fn which_cmd(cmd: &str) -> Cmd {
         "q" => Cmd::Quit,
         "h" => Cmd::Help,
         "f" => Cmd::File,
+        // "list" => Cmd::List,
         _ => Cmd::Unknown,
     }
 }
@@ -46,11 +47,15 @@ fn which_cmd(cmd: &str) -> Cmd {
 // making changes in it.
 pub(crate) fn parse_cmd<'a>(
     ctx: &'a mut Context,
-    cmd: &String,
-) -> Result<&'a mut Context, Box<dyn Error>> {
+    cmd: &'a String,
+) -> Result<Context, Box<dyn Error>>
+where
+    Context: Default,
+{
     // Bypassing Ctrl-d to prevent exiting and empty inputs.
     if cmd.is_empty() || cmd == "\n" {
-        return Ok(ctx);
+        println!();
+        return Ok(std::mem::take(ctx));
     }
 
     // cmd is being passed around twice if only newline is hit
@@ -58,17 +63,14 @@ pub(crate) fn parse_cmd<'a>(
         // TODO: Move passing around cmd as argument, every match case will
         // identify important args here and only pass those important args.
         Cmd::File => {
-            ctx.FCtx.process(cmd.clone())?;
-            dump!(ctx.FCtx);
-            // As new binary is loaded, we should return
+            let ctx = ctx.FCtx.process(cmd.to_owned())?;
             return Ok(ctx);
         }
         Cmd::BreakPoint => {
-            // TODO: Can this be passed as reference? Is GAT coming in
-            // picture?
             ctx.BrCtx.process(cmd.clone())?;
         }
         Cmd::Run => {
+            // TODO: Add variadic interface in CmdTy trait.
             ctx.RCtx.process(None)?;
         }
         Cmd::Quit => {
@@ -77,29 +79,28 @@ pub(crate) fn parse_cmd<'a>(
         Cmd::Help => {
             // FIXME: Why do we need help module if every command can dump_help
             // itself?
-            // help::dump_help(&cmd);
-            ctx.BrCtx.dump_help();
-            ctx.RCtx.dump_help();
-            ctx.FCtx.dump_help();
+            ctx.dump_help();
         }
+        // Cmd::List => {
+        //     todo!();
+        // }
         Cmd::Unknown => {
             eprintln!("unknown command");
         }
     }
-    Ok(ctx)
+    Ok(std::mem::take(ctx))
 }
 
-pub(crate) fn get_next_cmd(input: &mut String) -> Result<&mut String, wdbError> {
-    let prev_input = input.clone();
-    *input = String::new();
+pub(crate) fn get_next_cmd() -> Result<String, wdbError> {
+    let mut input = String::new();
 
-    print!("(wdb) ");
+    print!("@(wdb) ");
     if std::io::stdout().flush().is_err() {
         return Err(wdbError::from(wdbErrorKind::BreakPointParseError));
     }
 
     let stdin = std::io::stdin();
-    if stdin.read_line(input).is_err() {
+    if stdin.read_line(&mut input).is_err() {
         return Err(wdbError::from(wdbErrorKind::ParseError));
     }
 

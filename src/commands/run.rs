@@ -1,7 +1,8 @@
+use crate::context::Context;
 use crate::debugee;
-use crate::debugger::Context;
 use crate::error::{wdbError, wdbErrorKind};
 
+#[derive(Default)]
 pub(crate) struct RunTy {
     is_running: bool,
     pc: u32,
@@ -32,7 +33,9 @@ impl RunTy {
 
 impl crate::commands::CmdTy for RunTy {
     type cmd = Option<String>;
-    fn process(&mut self, cmd: Self::cmd) -> Result<(), wdbError> {
+    type ParentCtx = ();
+
+    fn process(&mut self, cmd: Self::cmd) -> Result<Self::ParentCtx, wdbError> {
         // start running the debugee until next interrupt is occurred
         println!("Running...");
         // FIXME: Fix the binary context.

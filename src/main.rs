@@ -13,6 +13,7 @@ use object::Object;
 use std::{env, fs, process};
 
 mod commands;
+mod context;
 mod debugee;
 mod debugger;
 mod error;
@@ -22,7 +23,7 @@ mod utils;
 fn main() -> Result<(), wdbError> {
     let args: Vec<String> = env::args().collect();
 
-    if let Err(e) = debugger::init_debugger(&args) {
+    if let Err(e) = debugger::init_debugger(args) {
         crate::utils::edump!(e);
     }
 

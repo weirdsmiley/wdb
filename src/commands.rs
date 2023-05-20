@@ -1,7 +1,6 @@
 //! This module defines all the supported commands for the debugger. It
 //! also contains all the methods associated to perform operations
 //! according to the command after parsing it.
-use crate::debugger::Context;
 use crate::error::wdbError;
 use std::error::Error;
 
@@ -19,6 +18,7 @@ pub(crate) enum Cmd {
     // Print,
     Quit,
     Run,
+    // List,
     Unknown,
 }
 
@@ -32,9 +32,11 @@ pub(crate) enum Cmd {
 pub(crate) trait CmdTy {
     // declare a type which stores the current cmd (raw)
     type cmd;
+    // Replace the context whenever necessary (viz file command)
+    type ParentCtx;
 
     // The processing logic for every command will lie here.
-    fn process(&mut self, c: Self::cmd) -> Result<(), wdbError>;
+    fn process(&mut self, c: Self::cmd) -> Result<Self::ParentCtx, wdbError>;
 
     // Each command can implement this function for specifically dumping their
     // help. This is different from dumping their members' information.

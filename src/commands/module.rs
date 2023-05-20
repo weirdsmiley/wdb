@@ -1,26 +1,21 @@
 use crate::error::wdbError;
 
-pub(crate) struct ModuleInfo {
-    source: &'static str, // source file name (infer from elf header)
-    binary: &'static str, // binary path
+pub(crate) struct ModuleInfo<'a> {
+    binary: &'a String, // binary path
 }
 
-impl ModuleInfo {
-    pub(crate) fn new(src: &'static str, bin: &'static str) -> Result<Self, wdbError> {
+impl<'a> ModuleInfo<'a> {
+    pub(crate) fn new(bin: &'a String) -> Result<Self, wdbError> {
         // TODO: Checks if binary doesn't exists or different architecture.
-        Ok(ModuleInfo {
-            source: src,
-            binary: bin,
-        })
+        Ok(ModuleInfo { binary: bin })
     }
 
     pub(crate) fn dump(&self) -> String {
         format!(
             "{{
-  source: {}
   binary: {}
 }}",
-            self.source, self.binary
+            self.binary
         )
     }
 }
@@ -31,8 +26,8 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let mod_info = ModuleInfo::new("main.c", "a.out").unwrap();
-        assert!(mod_info.source == "main.c");
+        let module = String::from("a.out");
+        let mod_info = ModuleInfo::new(&module).unwrap();
         assert!(mod_info.binary == "a.out");
     }
 }

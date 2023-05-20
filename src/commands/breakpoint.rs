@@ -1,25 +1,29 @@
 //! This submodule performs all handling for breakpoint command in the
 //! available in the debugger.
-use crate::debugger::Context;
+use crate::context::Context;
 use crate::error::{wdbError, wdbErrorKind};
+use crate::utils::{dump, edump};
 
 // TODO: Provide better interface to setting breakpoints such as:
 // 1. simply the function names (starting of that function.
 // 2. setting at main
 // 3. setting at end of a function
+#[derive(Default)]
 pub(crate) struct BreakPointTy {
-    pub(crate) file: String,
-    pub(crate) line: u32,
+    pub(crate) brlist: Vec<(String, u32)>,
+    // pub(crate) file: String,
+    // pub(crate) line: u32,
     // mod_info: ModuleInfo,
 }
 
 impl BreakPointTy {
     // TODO: Let us take the input str itself and use from_str to parse
     // it.
-    pub(crate) fn new(l: u32) -> Result<Self, wdbError> {
+    pub(crate) fn new(f: String, l: u32) -> Result<Self, wdbError> {
         Ok(BreakPointTy {
-            file: "".to_string(),
-            line: l,
+            brlist: vec![(f, l)],
+            // file: "".to_string(),
+            // line: l,
         })
     }
 
@@ -40,12 +44,13 @@ impl BreakPointTy {
     }
 
     // Parse br and insert breakpoint to insert it to self.
-    pub(crate) fn insert(&mut self, br: &str) -> Result<&mut Self, wdbError> {
+    fn insert(&mut self, br: &str) -> Result<&mut Self, wdbError> {
         match BreakPointTy::parse(br) {
             Ok(parsed) => {
                 let (file, line) = parsed;
-                self.file = file;
-                self.line = line;
+                self.brlist.push((file, line));
+                // self.file = file;
+                // self.line = line;
                 Ok(self)
             }
             Err(err) => Err(err),
@@ -53,7 +58,16 @@ impl BreakPointTy {
     }
 
     pub(crate) fn dump(&self) -> String {
-        self.line.to_string()
+        // self.line.to_string()
+        let mut lists = String::from("\t");
+
+        for pair in &self.brlist {
+            let (f, l) = pair;
+            let br_str = f.clone() + " ".into() + &*l.to_string() + "\n\t";
+            lists = lists + br_str.as_str();
+        }
+
+        return lists;
     }
 }
 
@@ -62,13 +76,18 @@ impl std::str::FromStr for BreakPointTy {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (file, line) = BreakPointTy::parse(s).unwrap();
 
-        Ok(BreakPointTy { file, line })
+        // Ok(BreakPointTy { file, line })
+        Ok(BreakPointTy {
+            brlist: vec![(file, line)],
+        })
     }
 }
 
 impl crate::commands::CmdTy for BreakPointTy {
     type cmd = String;
-    fn process(&mut self, cmd: Self::cmd) -> Result<(), wdbError> {
+    type ParentCtx = ();
+
+    fn process(&mut self, cmd: Self::cmd) -> Result<Self::ParentCtx, wdbError> {
         // Assign breakpoint (replace first byte of current instruction
         // with 0xcc.
         // FIXME: Already pass a Vec<&str> of input command in all
@@ -86,7 +105,8 @@ impl crate::commands::CmdTy for BreakPointTy {
         // method.
         match self.insert(breakpoint) {
             Ok(x) => {
-                println!("breakpoint set at {}:{}", self.file, self.line);
+                let (file, line) = self.brlist.last().unwrap();
+                println!("breakpoint set at {}:{}", file, line);
             }
             Err(err) => {
                 // TODO: Implement enum class for wdbErrorKind and match
@@ -101,6 +121,7 @@ impl crate::commands::CmdTy for BreakPointTy {
                 return Err(err);
             }
         };
+
         Ok(())
     }
 
@@ -127,8 +148,8 @@ mod tests {
     fn test_parse() {
         // test parse()
         let brk_t = BreakPointTy {
-            file: "file".into(),
-            line: 123,
+            brlist: vec![("file".into(), 123)], // file: "file".into(),
+                                                // line: 123,
         };
         // FIXME: Match with appropriate wdbErrorKind(s). Also, if
         // wdbErrorKind is static in nature then should we allocate those

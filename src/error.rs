@@ -37,7 +37,7 @@ impl From<wdbErrorKind> for wdbError {
 impl fmt::Display for wdbError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // FIXME: Doesn't look aesthetically pleasing.
-        write!(f, "(err) {}", self.kind)
+        write!(f, "!(err) {}", self.kind)
     }
 }
 

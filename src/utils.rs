@@ -23,7 +23,7 @@ pub(crate) use dump;
 /// This primitive provides an error dumping for wdbErrorKinds.
 macro_rules! edump {
     ($var:expr) => {
-        eprintln!("{}", $var);
+        eprintln!("{}", $var)
     };
 }
 pub(crate) use edump;
