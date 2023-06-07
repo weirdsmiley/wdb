@@ -59,7 +59,7 @@ impl BreakPointTy {
 
     pub(crate) fn dump(&self) -> String {
         // self.line.to_string()
-        let mut lists = String::from("\t");
+        let mut lists = String::from("\n\t");
 
         for pair in &self.brlist {
             let (f, l) = pair;
