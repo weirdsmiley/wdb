@@ -38,11 +38,13 @@ impl crate::commands::CmdTy for RunTy {
     fn process(&mut self, cmd: Self::cmd) -> Result<Self::ParentCtx, wdbError> {
         // start running the debugee until next interrupt is occurred
         println!("Running...");
-        // FIXME: Fix the binary context.
-        let bin = vec![];
-        debugee::continue_debugee(&bin)?;
+
+        if let Some(path) = cmd {
+            debugee::continue_debugee(path)?;
+        }
 
         // FIXME: Return type should be derived from continue_debugee.
+        // FIXME: What is it returning?
         match self.run() {
             Ok(r) => Ok(()),
             Err(e) => Err(e),

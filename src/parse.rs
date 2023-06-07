@@ -70,8 +70,7 @@ where
             ctx.BrCtx.process(cmd.clone())?;
         }
         Cmd::Run => {
-            // TODO: Add variadic interface in CmdTy trait.
-            ctx.RCtx.process(None)?;
+            ctx.RCtx.process(Some(ctx.FCtx.path.clone()))?;
         }
         Cmd::Quit => {
             std::process::exit(0);
