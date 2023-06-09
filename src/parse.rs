@@ -70,7 +70,16 @@ where
             ctx.BrCtx.process(cmd.clone())?;
         }
         Cmd::Run => {
-            ctx.RCtx.process(Some(ctx.FCtx.path.clone()))?;
+            let path = ctx.FCtx.path.clone();
+            let args = cmd
+                .clone()
+                .trim()
+                .trim_end_matches('\n')
+                .splitn(2, char::is_whitespace)
+                .skip(1)
+                .collect();
+
+            ctx.RCtx.process((path, args))?;
         }
         Cmd::Quit => {
             std::process::exit(0);

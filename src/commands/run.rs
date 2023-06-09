@@ -32,16 +32,16 @@ impl RunTy {
 }
 
 impl crate::commands::CmdTy for RunTy {
-    type cmd = Option<String>;
+    // (binary, args to binary)
+    type cmd = (String, String);
     type ParentCtx = ();
 
     fn process(&mut self, cmd: Self::cmd) -> Result<Self::ParentCtx, wdbError> {
         // start running the debugee until next interrupt is occurred
         println!("Running...");
 
-        if let Some(path) = cmd {
-            debugee::continue_debugee(path)?;
-        }
+        let (path, args) = cmd;
+        debugee::continue_debugee(path, args)?;
 
         // FIXME: Return type should be derived from continue_debugee.
         // FIXME: What is it returning?

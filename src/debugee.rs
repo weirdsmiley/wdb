@@ -10,7 +10,7 @@ use std::{borrow, env, fs, thread};
 // https://nnethercote.github.io/2022/07/27/twenty-years-of-valgrind.html
 // Doing binary interpretation is slow. Then how does gdb/lldb work faster?
 // Can cache be used in more efficient manner?
-pub(crate) fn continue_debugee(path: String) -> Result<(), wdbError> {
+pub(crate) fn continue_debugee(cmd: String, args: String) -> Result<(), wdbError> {
     // FIXME: Run obj binary, but this is not a binary, it is an object
     // file
     // TODO: In order to run the debugee program, we can use
@@ -23,7 +23,16 @@ pub(crate) fn continue_debugee(path: String) -> Result<(), wdbError> {
     // let file = fs::File::open(path).unwrap();
 
     let handle = thread::spawn(move || {
-        let output = Command::new(path).output().expect("Failed to run {path}");
+        let output;
+
+        if args.is_empty() {
+            output = Command::new(cmd).output().expect("Failed to run {path}");
+        } else {
+            output = Command::new(cmd)
+                .arg(args)
+                .output()
+                .expect("Failed to run {path} {args}");
+        }
 
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
