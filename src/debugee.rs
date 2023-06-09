@@ -28,8 +28,9 @@ pub(crate) fn continue_debugee(cmd: String, args: String) -> Result<(), wdbError
         if args.is_empty() {
             output = Command::new(cmd).output().expect("Failed to run {path}");
         } else {
+            let args: Vec<_> = args.split_whitespace().collect();
             output = Command::new(cmd)
-                .arg(args)
+                .args(args)
                 .output()
                 .expect("Failed to run {path} {args}");
         }
