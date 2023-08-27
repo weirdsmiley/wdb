@@ -26,9 +26,9 @@ use std::thread;
 //                // essentially a sequential program
 //      SIGTRAP returned, breakpoint hit, dump source line
 pub(crate) fn init_debugger(args: Vec<String>) -> Result<(), wdbError> {
-    if args.len() < 1 {
-        return Err(wdbError::from(wdbErrorKind::NonExistentBinary));
-    }
+    // if args.len() < 1 {
+    //     return Err(wdbError::from(wdbErrorKind::NonExistentBinary));
+    // }
 
     // use .text section to get the instructions
     // if let Some(section) = obj.section_by_name(".text") {
@@ -38,7 +38,14 @@ pub(crate) fn init_debugger(args: Vec<String>) -> Result<(), wdbError> {
     // }
     // println!("{:#x?}", bin);
 
-    let mut Ctx = Context::new(args[1].to_owned()).unwrap();
+    let path: Option<String>;
+    if args.len() == 2 {
+        path = Some(args[1].to_owned());
+    } else {
+        path = None;
+    }
+
+    let mut Ctx = Context::new(path).unwrap();
 
     loop {
         let cmd = parse::get_next_cmd()?;

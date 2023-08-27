@@ -1,3 +1,4 @@
+use crate::commands;
 use crate::commands::*;
 use crate::error::wdbError;
 use crate::error::wdbErrorKind;
@@ -16,22 +17,29 @@ pub(crate) struct Context {
 }
 
 impl Context {
-    pub(crate) fn new(path: String) -> Result<Self, wdbError> {
-        // Check binary for existence and arch support.
-        if let Ok(bin) = fs::read(path.clone()) {
-            if let Ok(obj) = object::File::parse(&*bin) {
-                if obj.architecture() != object::Architecture::X86_64 {
-                    return Err(wdbError::from(wdbErrorKind::ArchitectureError));
+    pub(crate) fn new(path: Option<String>) -> Result<Self, wdbError> {
+        if path.is_some() {
+            // Check binary for existence and arch support.
+            if let Ok(bin) = fs::read(path.as_ref().unwrap().clone()) {
+                if let Ok(obj) = object::File::parse(&*bin) {
+                    if obj.architecture() != object::Architecture::X86_64 {
+                        return Err(wdbError::from(wdbErrorKind::ArchitectureError));
+                    }
                 }
             }
         }
 
-        Ok(Context {
-            // ModInfo: module::ModuleInfo::new(bin)?,
-            FCtx: file::FileTy::new(path).unwrap(),
-            BrCtx: breakpoint::BreakPointTy::default(),
-            RCtx: run::RunTy::default(),
-        })
+        // let fctx = file::FileTy::new(path);
+
+        match file::FileTy::new(path) {
+            Ok(f) => Ok(Context {
+                // ModInfo: module::ModuleInfo::new(bin)?,
+                FCtx: f,
+                BrCtx: breakpoint::BreakPointTy::default(),
+                RCtx: run::RunTy::default(),
+            }),
+            Err(e) => Err(e),
+        }
     }
 
     pub(crate) fn dump(&self) -> String {
@@ -48,9 +56,13 @@ impl Context {
         )
     }
 
-    pub(crate) fn dump_help(&self) {
-        self.BrCtx.dump_help();
-        self.RCtx.dump_help();
-        self.FCtx.dump_help();
+    pub(crate) fn usage(&self) {
+        // self.BrCtx.dump_help();
+        // self.RCtx.dump_help();
+        // commands::CmdRunner::dump_help(&self.BrCtx);
+        // commands::CmdRunner::dump_help(&self.RCtx);
+        self.BrCtx.usage();
+        self.RCtx.usage();
+        self.FCtx.usage();
     }
 }

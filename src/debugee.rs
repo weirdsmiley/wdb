@@ -1,4 +1,5 @@
 //! This module is for the exection of the debuggee program.
+use crate::commands::file::{self, FileTy};
 use crate::error::wdbError;
 use object::{Object, ObjectSection};
 use std::error::Error;
@@ -10,7 +11,9 @@ use std::{borrow, env, fs, thread};
 // https://nnethercote.github.io/2022/07/27/twenty-years-of-valgrind.html
 // Doing binary interpretation is slow. Then how does gdb/lldb work faster?
 // Can cache be used in more efficient manner?
-pub(crate) fn continue_debugee(cmd: String, args: String) -> Result<(), wdbError> {
+pub(crate) fn continue_debugee(cmd: &mut file::FileTy, args: String) -> Result<(), wdbError> {
+    // We have the binary path, how to continue its execution.
+
     // FIXME: Run obj binary, but this is not a binary, it is an object
     // file
     // TODO: In order to run the debugee program, we can use
@@ -22,31 +25,31 @@ pub(crate) fn continue_debugee(cmd: String, args: String) -> Result<(), wdbError
     // let path = "test/bin";
     // let file = fs::File::open(path).unwrap();
 
-    let handle = thread::spawn(move || {
-        let output;
+    // let handle = thread::spawn(move || {
+    //     let output;
 
-        if args.is_empty() {
-            output = Command::new(cmd).output().expect("Failed to run {path}");
-        } else {
-            let args: Vec<_> = args.split_whitespace().collect();
-            output = Command::new(cmd)
-                .args(args)
-                .output()
-                .expect("Failed to run {path} {args}");
-        }
+    //     if args.is_empty() {
+    //         output = Command::new(cmd).output();
+    //     } else {
+    //         let args: Vec<_> = args.split_whitespace().collect();
+    //         output = Ok(Command::new(cmd)
+    //             .args(args)
+    //             .output()
+    //             .expect("Failed to run {path} {args}"));
+    //     }
 
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            println!("{stdout}");
-        } else {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            println!("{stderr}");
-        }
-    });
+    //     if output.status.success() {
+    //         let stdout = String::from_utf8_lossy(&output.stdout);
+    //         println!("{stdout}");
+    //     } else {
+    //         let stderr = String::from_utf8_lossy(&output.stderr);
+    //         println!("{stderr}");
+    //     }
+    // });
 
-    handle
-        .join()
-        .expect("Failed to join spawned thread for {path}");
+    // handle
+    //     .join()
+    //     .expect("Failed to join spawned thread for {path}");
 
     Ok(())
 

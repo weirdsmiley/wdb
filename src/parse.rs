@@ -1,6 +1,9 @@
 //! This module gets the next input command inside the debugger and parses
 //! it accordingly.
-use crate::commands::*;
+use crate::commands::breakpoint::BreakPointTy;
+use crate::commands::file::FileTy;
+use crate::commands::run::RunTy;
+use crate::commands::{self, *};
 use crate::context::Context;
 use crate::error::{wdbError, wdbErrorKind};
 use crate::utils::*;
@@ -45,10 +48,7 @@ fn which_cmd(cmd: &str) -> Cmd {
 
 // Take a mutable Context reference and return it after parsing and
 // making changes in it.
-pub(crate) fn parse_cmd<'a>(
-    ctx: &'a mut Context,
-    cmd: &'a String,
-) -> Result<Context, Box<dyn Error>>
+pub(crate) fn parse_cmd<'a>(ctx: &'a mut Context, cmd: &'a String) -> Result<Context, wdbError>
 where
     Context: Default,
 {
@@ -63,15 +63,22 @@ where
         // TODO: Move passing around cmd as argument, every match case will
         // identify important args here and only pass those important args.
         Cmd::File => {
-            let ctx = ctx.FCtx.process(cmd.to_owned())?;
+            // let ctx = ctx.FCtx.process(cmd.to_owned())?;
+            // let ctx = commands::CmdRunner::process::<()>(&mut ctx.FCtx, cmd, &mut ())?;
+            let ctx = ctx.FCtx.process::<()>(cmd, &mut ())?;
             return Ok(ctx);
         }
         Cmd::BreakPoint => {
-            ctx.BrCtx.process(cmd.clone())?;
+            // ctx.BrCtx.process(cmd.clone())?;
+            // ctx.BrCtx.processNew::<FileTy>(&mut ctx.FCtx);
+            // commands::CmdTy::process(&mut ctx.BrCtx, cmd.clone())?;
+            // commands::CmdTy::processNew::<FileTy>(&mut ctx.BrCtx, &mut ctx.FCtx);
+            // ctx.BrCtx.process(cmd, &mut ctx.FCtx);
+            commands::CmdRunner::process::<FileTy>(&mut ctx.BrCtx, cmd, &mut ctx.FCtx)?;
         }
         Cmd::Run => {
             let path = ctx.FCtx.path.clone();
-            let args = cmd
+            let args: String = cmd
                 .clone()
                 .trim()
                 .trim_end_matches('\n')
@@ -79,7 +86,9 @@ where
                 .skip(1)
                 .collect();
 
-            ctx.RCtx.process((path, args))?;
+            // ctx.RCtx.process((path, args))?;
+            // ctx.RCtx.processNew::<BreakPointTy>(&mut ctx.BrCtx);
+            commands::CmdRunner::process::<FileTy>(&mut ctx.RCtx, &args, &mut ctx.FCtx)?;
         }
         Cmd::Quit => {
             std::process::exit(0);
@@ -87,13 +96,14 @@ where
         Cmd::Help => {
             // FIXME: Why do we need help module if every command can dump_help
             // itself?
-            ctx.dump_help();
+            ctx.usage();
         }
         // Cmd::List => {
         //     todo!();
         // }
         Cmd::Unknown => {
-            eprintln!("unknown command");
+            // eprintln!("unknown command");
+            return Err(wdbError::from(wdbErrorKind::UnknownCmd));
         }
     }
     Ok(std::mem::take(ctx))
@@ -102,7 +112,7 @@ where
 pub(crate) fn get_next_cmd() -> Result<String, wdbError> {
     let mut input = String::new();
 
-    print!("@(wdb) ");
+    print!("{BRIGHT}@(wdb){RESET} ");
     if std::io::stdout().flush().is_err() {
         return Err(wdbError::from(wdbErrorKind::BreakPointParseError));
     }

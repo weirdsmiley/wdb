@@ -38,7 +38,23 @@ pub(crate) trait CmdTy {
     // The processing logic for every command will lie here.
     fn process(&mut self, c: Self::cmd) -> Result<Self::ParentCtx, wdbError>;
 
+    type FileArg<T>;
+    fn processNew<T>(&mut self, f: &mut Self::FileArg<T>);
+
     // Each command can implement this function for specifically dumping their
     // help. This is different from dumping their members' information.
     fn dump_help(&self);
+}
+
+// NOTE: This will replace CmdTy in future.
+pub(crate) trait CmdRunner {
+    type Arg<T>;
+    type Return<T>;
+    fn process<T>(
+        &mut self,
+        cmd: &String,
+        f: &mut Self::Arg<T>,
+    ) -> Result<Self::Return<T>, wdbError>;
+
+    fn usage(&self);
 }

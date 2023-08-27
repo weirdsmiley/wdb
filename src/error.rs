@@ -1,3 +1,4 @@
+use crate::utils::*;
 /// This provides a custom error handling for wdb. It will handle all known and
 /// possible unknown or custom designed error strings when needed.
 use std::fmt;
@@ -37,7 +38,7 @@ impl From<wdbErrorKind> for wdbError {
 impl fmt::Display for wdbError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // FIXME: Doesn't look aesthetically pleasing.
-        write!(f, "!(err) {}", self.kind)
+        write!(f, "{BRIGHT}{RED}!(err){RESET} {}", self.kind)
     }
 }
 
@@ -62,6 +63,7 @@ pub(crate) enum wdbErrorKind {
     RunIUError,
     RunPCOverflowError,
     NonExistentBinary,
+    UnknownCmd,
 }
 
 impl wdbErrorKind {
@@ -78,6 +80,7 @@ impl wdbErrorKind {
             RunIUError => "usage: r[un] <param>",
             RunPCOverflowError => "run: Program counter has overflowed!",
             NonExistentBinary => "no binary provided",
+            UnknownCmd => "unknown command",
         }
     }
 }
